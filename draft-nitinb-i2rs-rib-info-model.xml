@@ -2,6 +2,7 @@
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
 <!DOCTYPE rfc SYSTEM "rfc3978.dtd" [
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC4271 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4271.xml">
 <!ENTITY RFC5065 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5065.xml">
 <!ENTITY RFC5511 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5511.xml">
 <!ENTITY I2RS-USE-CASES SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.white-i2rs-use-case.xml">
@@ -339,8 +340,10 @@
             the RIB manager in multiple ways. The RIB manager can choose paths
             with lower as-path length. Or the RIB manager can choose to not
             install paths going via a particular AS. How exactly the RIB
-            manager uses the as-path is outside the scope of this
-            document.</t>
+            manager uses the as-path is outside the scope of this document.
+            For details of how the as-path is formed, see Section 5.1.2 of
+            <xref target="RFC4271"></xref> and Section 3 of <xref
+            target="RFC5065"></xref>.</t>
 
             <t>route-vendor-attributes: Vendors can specify vendor-specific
             attributes using this. The details of this field is outside the
@@ -643,7 +646,12 @@
                                       <mpls-route-attributes> | 
                                       <ethernet-route-attributes>
 <ip-route-attributes> ::= [<as-path>] [<rpf-check-interface>]
-<as-path> ::= <AS_NUMBER> [<as-path>]
+<as-path> ::= (<as-path-segment-type> <as-list>) [<as-path> ...]
+<as-path-segment-type> ::= <AS_SET> | <AS_SEQUENCE> | 
+                           <AS_CONFED_SEQUENCE> | <AS_CONFED_SET>
+<as-list> ::= <AS_NUMBER> [<as-path>]
+
+
 <rpf-check-interface> ::= <interface-list>
 
 <mpls-route-attributes> ::= [<rpf-check-interface>]
@@ -965,6 +973,8 @@ on the edge router.
     </references>
 
     <references title="Informative References">
+      &RFC4271;
+
       &RFC5065;
 
       &RFC5511;
