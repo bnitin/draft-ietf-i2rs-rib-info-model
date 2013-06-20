@@ -70,7 +70,7 @@
       </address>
     </author>
 
-    <date day="9" month="June" year="2013" />
+    <date day="18" month="June" year="2013" />
 
     <area>Routing</area>
 
@@ -646,14 +646,13 @@
 <nexthop-chain-identifier> ::= <NEXTHOP_NAME> | <NEXTHOP_ID>
 <nexthop> ::= (<nexthop-identifier> | <INTERFACE_IDENTIFIER> |
                (<nexthop-address> [<ROUTING_TABLE_NAME>] 
-                                  [<OUTGOING INTERFACE>) | 
+                                  [<OUTGOING INTERFACE>]) | 
                (<tunnel-encap> [<OUTGOING_INTERFACE>) | 
                <ROUTING_TABLE_NAME>)
                [<nexthop-attributes>]
                [<nexthop-vendor-attributes>]
 
 <nexthop-identifier> ::= <NEXTHOP_NAME> | <NEXTHOP_ID>
-<nexthop-list-member-identifier> ::= <NEXTHOP_NAME> | <NEXTHOP_ID>
 <nexthop-address> ::= <ip-address> | 
                       (<IEEE_MAC> <IEEE_MAC_ADDRESS>) |
                       (<ISO> <ISO_ADDRESS>)
@@ -661,14 +660,9 @@
                       (<RECEIVE> [<COS_VALUE>] [<rate-limiter>])
 <rate-limiter> ::= <>
 
-<tunnel-identifier> ::= <tunnel-type> ( <TUNNEL_NAME> | <TUNNEL_ID> )
-<tunnel-type> ::= <IP> | <MPLS> | <GRE> | <VxLAN> | <NVGRE>
-
 <tunnel-encap> ::= (<IP> <ip-header>) | (<MPLS> <mpls-header>) | 
                    (<GRE> <gre-header>) | (<VXLAN> <vxlan-header>) |
                    (<NVGRE> <nvgre-header>)
-<tunnel-header> ::= <ip-header> | <mpls-header> | <gre-header> |
-                    <vxlan-header> | <nvgre-header>
 <ip-header> ::= ((<SOURCE_IPv4_ADDRESS> <DESTINATION_IPv4_ADDRESS> 
                   <PROTOCOL> [<TTL>] [<DSCP>]) | 
                  (<SOURCE_IPV6_ADDRESS> <DEST_IPV6_ADDRESS> 
@@ -747,7 +741,7 @@
 
           <figure>
             <artwork><![CDATA[
-<network-list> ::= <nexthop> [ <nexthop> ... ]
+<nexthop-list> ::= <nexthop> [ <nexthop> ... ]
 
 The above can be derived from the grammar as follows:
 
@@ -860,18 +854,20 @@ The above can be derived from the grammar as follows:
         the edge device (and optionally control the outgoing interface on that
         edge device) that is used by a server to send traffic out. This can be
         easily achieved by having the controller program the edge router (Eg.
-        192.168.2.10) and the server along the following lines:</t>
+        192.0.2.10) and the server along the following lines:</t>
 
         <figure>
           <artwork><![CDATA[
 Server:
 <route> ::= <routing-table-name> <match> (<edge-router> 
                                           <edge-router-interface>)
-<route> ::= <routing-table-name> <10.1.1.1/16> (<GRE> <gre-header>) 
-                                            (<MPLS> <mpls-header>)
-<route> ::- <routing-table-name> <10.1.1.1/16> (<GRE> <192.168.2.10> 
-                                                <GRE_PROTOCOL_MPLS>) 
-                                               (<MPLS_PUSH> <100>)
+<route> ::= <routing-table-name> <198.51.100.1/16> 
+                  (<GRE> <gre-header>) 
+                  (<MPLS> <mpls-header>)
+
+<route> ::- <routing-table-name> <198.51.100.1/16> 
+                  (<GRE> <192.0.2.10> <GRE_PROTOCOL_MPLS>)
+                  (<MPLS_PUSH> <100>)
 
 Edge Router:
 <route> ::= <mpls-routing-table> <mpls-route> <nexthop>
