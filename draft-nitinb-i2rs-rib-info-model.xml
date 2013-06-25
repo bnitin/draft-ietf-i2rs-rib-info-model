@@ -79,7 +79,7 @@
       </address>
     </author>
 
-    <date day="18" month="June" year="2013" />
+    <date day="25" month="June" year="2013" />
 
     <area>Routing</area>
 
@@ -996,13 +996,12 @@ on the edge router.
     </section>
 
     <section title="Acknowledgements">
-      <t>The authors would like to thank Alia Atlas, Edward Crabbe, Jeff Haas
-      and Ina Minei on their comments and suggestions on this draft. Hariharan
-      Ananthakrishnan was instrumental in converting the RIB grammar to a YANG
-      representation. The following people contributed to the design of the
-      RIB model as part of the I2RS Interim meeting in April 2013 - Wes
-      George, Chris Liljenstolpe, Jeff Tantsura, Sriganesh Kini, Susan Hares,
-      Fabian Schneider and Nitin Bahadur.</t>
+      <t>The authors would like to thank Alia Atlas, Edward Crabbe, Hariharan
+      Ananthakrishnan, Jeff Haas and Ina Minei on their comments and
+      suggestions on this draft. The following people contributed to the
+      design of the RIB model as part of the I2RS Interim meeting in April
+      2013 - Wes George, Chris Liljenstolpe, Jeff Tantsura, Sriganesh Kini,
+      Susan Hares, Fabian Schneider and Nitin Bahadur.</t>
     </section>
   </middle>
 
@@ -1018,24 +1017,11 @@ on the edge router.
 
       &RFC5511;
 
-      &RFC6020;
-
       &I2RS-USE-CASES;
 
       &I2RS-PROBLEM-STATEMENT;
 
       &I2RS-VN-VC;
     </references>
-
-    <section title="YANG representation of RIB grammar">
-      <t>The RIB grammar (<xref target="rib-grammar"></xref>) can be
-      represented in YANG (<xref target="RFC6020"></xref>) as follows:</t>
-
-      <figure>
-        <artwork><![CDATA[artwork
-
-]]></artwork>
-      </figure>
-    </section>
   </back>
 </rfc>
