@@ -2,8 +2,11 @@
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
 <!DOCTYPE rfc SYSTEM "rfc3978.dtd" [
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC3443 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3443.xml">
 <!ENTITY RFC4271 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4271.xml">
+<!ENTITY RFC4915 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4915.xml">
 <!ENTITY RFC5065 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5065.xml">
+<!ENTITY RFC5120 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5120.xml">
 <!ENTITY RFC5511 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5511.xml">
 <!ENTITY RFC6020 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6020.xml">
 <!ENTITY I2RS-USE-CASES SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.white-i2rs-use-case.xml">
@@ -16,7 +19,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-nitinb-i2rs-rib-info-model-00"
+<rfc category="info" docName="draft-nitinb-i2rs-rib-info-model-01"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -79,7 +82,7 @@
       </address>
     </author>
 
-    <date day="25" month="June" year="2013" />
+    <date day="10" month="July" year="2013" />
 
     <area>Routing</area>
 
@@ -198,12 +201,12 @@
 
       <t>The rest of this document is organized as follows. <xref
       target="rib-data"> </xref> goes into the details of what constitutes and
-      can be programmed in a RIB. The RIB grammar is specified in <xref
+      can be programmed in a RIB. <xref target="events"></xref> provides a
+      high-level view of the events and notifications going from a network
+      device to an external entity, to update the external entity on
+      asynchronous events. The RIB grammar is specified in <xref
       target="rib-grammar"></xref>. Examples of using the RIB grammar are
-      shown in <xref target="rib-examples"></xref>. <xref
-      target="events"></xref> provides a high-level view of the events and
-      notifications going from a network device to an external entity, to
-      update the external entity on asynchronous events.</t>
+      shown in <xref target="rib-examples"></xref>.</t>
 
       <section title="Conventions used in this document">
         <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -219,20 +222,28 @@
       target="rib-grammar"></xref>).</t>
 
       <section anchor="rib-data" title="RIB definition">
-        <t>A RIB contains one or more routing instances. On a network device,
-        a RIB is uniquely identified by its name. A routing instance can be in
-        only 1 RIB. A routing instance is a collection of routing tables,
-        interfaces, and routing parameters. A routing instance creates a
-        logical slice of the router and allows different logical slices;
-        across a set of routers; to communicate with other each. Layer 3 VPNs,
-        Layer 2 VPNs and VPLS are modeled as routing instances. The set of
-        interfaces indicates which interfaces this RIB has control over. The
-        routing tables specify how incoming traffic is to be forwarded. And
-        the routing parameters control the information in the routing tables.
-        The intersection set of interfaces of 2 routing instances MUST be the
-        null set. In other words, an interface should not be present in 2
-        routing instances. Thus a routing instance describes the routing
-        policy and parameters across a set of interfaces.</t>
+        <t>A RIB is a logical construct controlled by an external entity. A
+        RIB contains one or more routing instances. On a network device, a RIB
+        is uniquely identified by its name. A routing instance can be in only
+        1 RIB. A routing instance, in the context of the RIB information
+        model, is a collection of routing tables, interfaces, and routing
+        parameters. A routing instance creates a logical slice of the router
+        and allows different logical slices; across a set of routers; to
+        communicate with other each. Layer 3 Virtual Private Networks (VPN),
+        Layer 2 VPNs (L2VPN) and Virtual Private Lan Service (VPLS) can be
+        modeled as routing instances. Note that modeling a Layer 2 VPN using a
+        routing instance only models the Layer-3 (RIB) aspect and does not
+        model any layer-2 information (like ARP) that might be associated with
+        the L2VPN.</t>
+
+        <t>The set of interfaces indicates which interfaces this routing
+        instance has control over. The routing tables specify how incoming
+        traffic is to be forwarded. And the routing parameters control the
+        information in the routing tables. The intersection set of interfaces
+        of 2 routing instances MUST be the null set. In other words, an
+        interface should not be present in 2 routing instances. Thus a routing
+        instance describes the routing information and parameters across a set
+        of interfaces.</t>
 
         <t>A routing instance MUST contain the following mandatory
         fields.<list style="symbols">
@@ -295,7 +306,8 @@
         <t>If a routing instance contains multiple tables of the same type
         (e.g. IPv4), then a MULTI_TOPOLOGY_ID MUST be associated with each
         such table. In other words, multiple tables MUST be used only when
-        there are multiple topologies. In a given routing instance,
+        there are multiple topologies (see <xref target="RFC4915"></xref> and
+        <xref target="RFC5120"></xref> ). In a given routing instance,
         MULTI_TOPOLOGY_ID MUST be unique across routing tables of the same
         type.</t>
 
@@ -324,6 +336,9 @@
             <t>MAC: Match on ethernet destination addresses</t>
 
             <t>Interface: Match on incoming interface of packet</t>
+
+            <t>IP multicast: Match on (S, G) or (*, G), where S and G are IP
+            prefixes</t>
           </list></t>
 
         <t>Each route can have associated with it one or more optional route
@@ -435,12 +450,15 @@
 
               <t>Protection lists - for primary/backup paths</t>
 
-              <t>Nexthop chains - chaining headers, e.g. MPLS label over a GRE
-              header</t>
+              <t>Nexthop chains - for chaining headers, e.g. MPLS label over a
+              GRE header</t>
 
               <t>Lists of lists - recursive application of the above</t>
 
               <t>Indirect nexthops - pointing to a nexthop identifier</t>
+
+              <t>Special nexthops - for performing specific well-defined
+              functions</t>
             </list>It is expected that all network devices will have a limit
           on recursion and not all hardware will be able to support all kinds
           of nexthops. RIB capability negotiation becomes very important for
@@ -514,17 +532,38 @@
               device representing another nexthop or another nexthop
               chain.</t>
 
-              <t>INTERFACE_IDENTIFIER: This represents a physical, logical or
+              <t>EGRESS_INTERFACE: This represents a physical, logical or
               virtual interface on the network device.</t>
 
               <t>address: This can be an IP address or MAC address or ISO
-              address. An optional table name can also be specified to
-              indicate the table in which the address is to be looked up
-              further. By default the table will be the same in which the
-              route lookup was performed.</t>
+              address.<list style="symbols">
+                  <t>An optional table name can also be specified to indicate
+                  the table in which the address is to be looked up further.
+                  One can use the table name field to direct the packet from
+                  one domain into another domain. For example, a MPLS packet
+                  coming in on an interface would be looked up in a MPLS
+                  routing table and the nexthop for that could indicate that
+                  we strip the MPLS label and do a subsequent IPv4 lookup in
+                  an IPv4 table. By default the table will be the same in
+                  which the route lookup was performed.</t>
+
+                  <t>An optional egress interface can be specified to indicate
+                  which interface to send the packet out on. The egress
+                  interface is useful when the network device contains
+                  Ethernet interfaces and one needs to perform an ARP lookup
+                  for the IP packet.</t>
+                </list></t>
 
               <t>tunnel encap: This can be an encap representing an IP tunnel
-              or MPLS tunnel or others as defined in this document</t>
+              or MPLS tunnel or others as defined in this document. An
+              optional egress interface can be specified to indicate which
+              interface to send the packet out on. The egress interface is
+              useful when the network device contains Ethernet interfaces and
+              one needs to perform an ARP lookup for the IP packet.</t>
+
+              <t>logical tunnel: This can be a MPLS LSP or a GRE tunnel (or
+              others as defined in this document), that is represented by a
+              unique identifier (E.g. name).</t>
 
               <t>ROUTING_TABLE_NAME: This is a routing table that exists in
               the RIB. A nexthop pointing to a table indicates that the route
@@ -548,6 +587,38 @@
           to perform something specific. Vendor specific attributes can also
           be specified. The details of vendor specific attributes is outside
           the scope of this document.</t>
+
+          <section title="Nexthop flags">
+            <t>Nexthop flags in a nexthop is an optional attribute that is
+            used to denote specific connotation to hardware. Two common types
+            of operations are specified using nexthop flags.<list
+                style="symbols">
+                <t>NO_DECREMENT_TTL: This indicates that the IPv4 time-to-live
+                field in an IPv4 packet MUST NOT be decremented before the
+                packet is forwarded. This may be applied one when an IPv4
+                packet is encapsulated in a tunnel (E.g. MPLS) and one wants
+                to hide the fact that the packet is going through a
+                tunnel.</t>
+
+                <t>NO_PROPAGATE_TTL: This indicates that the IPv4 time-to-live
+                field in an IPv4 packet MUST NOT be propagated into an
+                equivalent field, when the IPv4 packet is tunneled. For
+                example, if the IPv4 packet is tunneled over MPLS, then the
+                network device should use the default time-to-live value for
+                the outer MPLS header. This field can also be used to indicate
+                that when a tunnel terminates, one does not propagate the
+                outer header's time-to-live value into the inner header. So,
+                on MPLS tunnel termination, one does not propagate the MPLS
+                TTL value into the IPv4 header.</t>
+              </list>The TTL nexthop flags can be used to simulate a Pipe
+            model for tunnels. See <xref target="RFC3443"></xref> for a
+            detailed understanding of Pipe model and Uniform model.</t>
+          </section>
+        </section>
+
+        <section title="Nexthop vendor attributes">
+          <t>This field has been defined for vendor specific extensions. The
+          contents of this field are beyond the scope of this document.</t>
         </section>
 
         <section title="Special nexthops">
@@ -647,25 +718,31 @@
 <interface-list> ::= (<INTERFACE_IDENTIFIER> ...)
 
 <routing-table-list> ::= (<routing-table> ...)
-<routing-table> ::= <routing-instance-name> <ROUTING_TABLE_NAME> 
-                    <table-family> 
+<routing-table> ::= <ROUTING_TABLE_NAME> <table-family>
                     [<route> ... ] [<MULTI_TOPOLOGY_ID>]
                     [ENABLE_IP_RPF_CHECK]
 <table-family> ::= <IPV4_TABLE_FAMILY> | <IPV6_TABLE_FAMILY> |
                    <MPLS_TABLE_FAMILY> | <IEEE_MAC_TABLE_FAMILY>
 
-<route> ::= <ROUTING_TABLE_NAME> <match>
-            <nexthop-list> [<route-attributes>]
+<route> ::= <match> <nexthop-list>
+            [<route-attributes>]
             [<route-vendor-attributes>]
 
 
 <match> ::= <ipv4-route> | <ipv6-route> | <mpls-route> | 
             <mac-route> | <interface-route>
 <ipv4-route> ::= <IPV4_ADDRESS> <IPV4_PREFIX_LENGTH>
+                 [<multicast-source-ipv4-address>]
 <ipv6-route> ::= <IPV6_ADDRESS> <IPV6_PREFIX_LENGTH>
-<mpls-route> ::= <MPLS> ( <MPLS_LABEL> ... ) 
+                 [<multicast-source-ipv6-address>]
+<mpls-route> ::= <MPLS> <MPLS_LABEL>
 <mac-route> ::= <IEEE_MAC> ( <MAC_ADDRESS> )
 <interface-route> ::= <INTERFACE> <INTERFACE_IDENTIFIER>
+
+<multicast-source-ipv4-address> ::= <IPV4_ADDRESS> 
+                                    <IPV4_PREFIX_LENGTH>
+<multicast-source-ipv6-address> ::= <IPV6_ADDRESS> 
+                                    <IPV6_PREFIX_LENGTH>
 
 <route-attributes> ::= [<ROUTE_PREFERENCE>] [<ROUTE_METRIC>]
                        [<LOCAL_ONLY>]
@@ -699,11 +776,11 @@
 
 <nexthop-chain> ::= (<nexthop> ...)
 <nexthop-chain-identifier> ::= <NEXTHOP_NAME> | <NEXTHOP_ID>
-<nexthop> ::= (<nexthop-identifier> | <INTERFACE_IDENTIFIER> |
-               (<nexthop-address> [<ROUTING_TABLE_NAME>]
-                                  [<EGRESS_INTERFACE>]) | 
-               (<tunnel-encap> [<ROUTING_TABLE_NAME>] 
-                [<EGRESS_INTERFACE>) |
+<nexthop> ::= (<nexthop-identifier> | <EGRESS_IDENTIFIER> |
+               (<nexthop-address> 
+                  ([<ROUTING_TABLE_NAME>] | [<EGRESS_INTERFACE>])) |
+               (<tunnel-encap> [<EGRESS_INTERFACE>]) |
+               <logical-tunnel> |
                <ROUTING_TABLE_NAME>)
                [<nexthop-attributes>]
                [<nexthop-vendor-attributes>]
@@ -716,6 +793,9 @@
 <special-nexthop> ::= <DISCARD> | <DISCARD_WITH_ERROR> | 
                       (<RECEIVE> [<COS_VALUE>] [<rate-limiter>])
 <rate-limiter> ::= <>
+
+<logical-tunnel> ::= <tunnel-type> <TUNNEL_NAME>
+<tunnel-type> ::= <IP> | <MPLS> | <GRE> | <VxLAN> | <NVGRE>
 
 <tunnel-encap> ::= (<IPV4> <ipv4-header>) | 
                    (<IPV6> <ipv6-header>) |
@@ -794,7 +874,7 @@
           having the traffic seamlessly route between network edges.</t>
         </section>
 
-        <section title="Replication lists">
+        <section anchor="replication-list" title="Replication lists">
           <t>One can create a replication list for replication traffic to
           multiple destinations. The destinations, in turn, could be complex
           nexthops in themselves - at a level supported by the network device.
@@ -914,6 +994,26 @@ The above can be derived from the grammar as follows:
         </section>
       </section>
 
+      <section title="Performing multicast">
+        <t>IP multicast involves matching a packet on (S, G) or (*, G), where
+        both S (source) and G (group) are IP prefixes. Following the match,
+        the packet is replicated to one or more recipients. How the recipients
+        subscribe to the multicast group is outside the scope of this
+        document.</t>
+
+        <t>In PIM-based multicast, the packets are IP forwarded on an IP
+        multicast tree. The downstream nodes on each point in the multicast
+        tree is one or more IP addresses. These can be represented as a
+        replication list ( <xref target="replication-list"></xref> ).</t>
+
+        <t>In MPLS-based multicast, the packets are forwarded on a point to
+        multipoint (P2MP) label-switched path (LSP). The nexthop for a P2MP
+        LSP can be represented in the nexthop grammar as a
+        &lt;logical-tunnel&gt; (P2MP LSP identifier) or a replication list (
+        <xref target="replication-list"></xref>) of &lt;tunnel-encap&gt;, with
+        each tunnel encap representing a single mpls downstream nexthop.</t>
+      </section>
+
       <section title="Solving optimized exit control">
         <t>In case of optimized exit control, a controller wants to control
         the edge device (and optionally control the outgoing interface on that
@@ -927,12 +1027,12 @@ Server:
 <route> ::= <routing-table-name> <match> (<edge-router> 
                                           <edge-router-interface>)
 <route> ::= <routing-table-name> <198.51.100.1/16> 
-                  (<GRE> <gre-header>) 
                   (<MPLS> <mpls-header>)
+                  (<GRE> <gre-header>) 
 
-<route> ::- <routing-table-name> <198.51.100.1/16> 
-                  (<GRE> <192.0.2.10> <GRE_PROTOCOL_MPLS>)
+<route> ::- <routing-table-name> <198.51.100.1/16>
                   (<MPLS_PUSH> <100>)
+                  (<GRE> <192.0.2.10> <GRE_PROTOCOL_MPLS>)             
 
 Edge Router:
 <route> ::= <mpls-routing-table> <mpls-route> <nexthop>
@@ -1011,9 +1111,15 @@ on the edge router.
     </references>
 
     <references title="Informative References">
+      &RFC3443;
+
       &RFC4271;
 
+      &RFC4915;
+
       &RFC5065;
+
+      &RFC5120;
 
       &RFC5511;
 
