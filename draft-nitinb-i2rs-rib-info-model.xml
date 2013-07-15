@@ -82,7 +82,15 @@
       </address>
     </author>
 
-    <date day="10" month="July" year="2013" />
+    <author fullname="Jan Medved" initials="J.M." surname="Medved">
+      <organization>Cisco</organization>
+
+      <address>
+        <email>jmedved@cisco.com</email>
+      </address>
+    </author>
+
+    <date day="15" month="July" year="2013" />
 
     <area>Routing</area>
 
@@ -99,10 +107,11 @@
       typically performed by network devices (routers and switches) using a
       routing information base (RIB). Protocols and configuration push data
       into the RIB and the RIB manager install state into the hardware; for
-      packet forwarding. This draft specifies an information model for the
-      RIB, to build a standardized RIB model, using which an external entity
-      (external to the network device) can read and write information from/to
-      the RIB.</t>
+      packet forwarding. This draft specifies an information model for the RIB
+      to enable defining a standardized data model. Such a data model can be
+      used to define an interface to the RIB from an entity that may even be
+      external to the network device. This interface can be used to support
+      new use-cases being defined by the IETF I2RS WG.</t>
     </abstract>
   </front>
 
@@ -155,27 +164,27 @@
       router makes an independent decision based on the routing data received
       from its peers. With the advent of newer deployment paradigms and the
       need for specialized applications, there is an emerging need to guide
-      the router's routing function ( <xref
-      target="I-D.atlas-i2rs-problem-statement"></xref>). Traditional
-      protocol-based RIB population suffices for most use cases where
-      distributed network control works. However there are use cases in which
-      the network admins today configure static routes, policies and RIB
+      the router's routing function <xref
+      target="I-D.atlas-i2rs-problem-statement"></xref>. Traditional
+      network-device protocol-based RIB population suffices for most use cases
+      where distributed network control works. However there are use cases in
+      which the network admins today configure static routes, policies and RIB
       import/export rules on the routers. There is also a growing list of use
-      cases ( <xref target="I-D.white-i2rs-use-case"></xref>, <xref
-      target="I-D.hares-i2rs-use-case-vn-vc"></xref> ) in which a network
-      admin might want to program the RIB based on data unrelated to just
-      routing (within that network's domain). It could be based on routing
-      data in adjacent domain or it could be based on load on storage and
-      compute in the given domain. Or it could simply be a programmatic way of
-      creating on-demand dynamic overlays between compute hosts (without
-      requiring the hosts to run traditional routing protocols). If there was
-      a standardized programmatic interface to a RIB, it would fuel further
-      networking applications targeted towards specific niches.</t>
+      cases <xref target="I-D.white-i2rs-use-case"></xref>, <xref
+      target="I-D.hares-i2rs-use-case-vn-vc"></xref> in which a network admin
+      might want to program the RIB based on data unrelated to just routing
+      (within that network's domain). It could be based on routing data in
+      adjacent domain or it could be based on load on storage and compute in
+      the given domain. Or it could simply be a programmatic way of creating
+      on-demand dynamic overlays between compute hosts (without requiring the
+      hosts to run traditional routing protocols). If there was a standardized
+      programmatic interface to a RIB, it would fuel further networking
+      applications targeted towards specific niches.</t>
 
-      <t>Programming the RIB involves 2 parts - reading what's in the RIB and
-      adding/modifying/deleting contents of the RIB. <xref
-      target="I-D.white-i2rs-use-case"></xref> lists various use-cases which
-      require read and/or write manipulation of the RIB.</t>
+      <t>A programmatic interface to the RIB involves 2 types of operations -
+      reading what's in the RIB and adding/modifying/deleting contents of the
+      RIB. <xref target="I-D.white-i2rs-use-case"></xref> lists various
+      use-cases which require read and/or write manipulation of the RIB.</t>
 
       <t>In order to understand what is in a router's RIB, methods like
       per-protocol SNMP MIBs and show output screen scraping are being used.
@@ -253,7 +262,7 @@
             <t>INSTANCE_DISTINGUISHER: Each routing instance must have a
             unique distinguisher associated with it. It enables one to
             distinguish routes across routing instances. The route
-            distinguisher MUST be unique across all routing instances in a
+            distinguisher SHOULD be unique across all routing instances in a
             given network device. How the INSTANCE_DISTINGUISHER is allocated
             and kept unique is outside the scope of this document. The
             instance distinguisher maps well to BGP route-distinguisher for
@@ -305,11 +314,11 @@
 
         <t>If a routing instance contains multiple tables of the same type
         (e.g. IPv4), then a MULTI_TOPOLOGY_ID MUST be associated with each
-        such table. In other words, multiple tables MUST be used only when
-        there are multiple topologies (see <xref target="RFC4915"></xref> and
-        <xref target="RFC5120"></xref> ). In a given routing instance,
-        MULTI_TOPOLOGY_ID MUST be unique across routing tables of the same
-        type.</t>
+        such table. Multiple tables are useful when describing multiple
+        topology IGP (Interior Gateway Protocol) networks (see <xref
+        target="RFC4915"></xref> and <xref target="RFC5120"></xref> ). In a
+        given routing instance, MULTI_TOPOLOGY_ID MUST be unique across
+        routing tables of the same type.</t>
 
         <t>Each route table can be optionally associated with a
         ENABLE_IP_RPF_CHECK attribute that enables Reverse path forwarding
@@ -703,7 +712,7 @@
 
     <section anchor="rib-grammar" title="RIB grammar">
       <t>This section specifies the RIB information model in Routing
-      Backus-Naur Form (<xref target="RFC5511"></xref>).</t>
+      Backus-Naur Form <xref target="RFC5511"></xref>.</t>
 
       <figure>
         <artwork><![CDATA[
