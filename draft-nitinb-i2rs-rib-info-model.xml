@@ -19,7 +19,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-nitinb-i2rs-rib-info-model-01"
+<rfc category="info" docName="draft-nitinb-i2rs-rib-info-model-02"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -90,7 +90,7 @@
       </address>
     </author>
 
-    <date day="15" month="July" year="2013" />
+    <date day="14" month="August" year="2013" />
 
     <area>Routing</area>
 
@@ -190,11 +190,11 @@
       per-protocol SNMP MIBs and show output screen scraping are being used.
       These methods are not scalable, since they are client pull mechanisms
       and not proactive push (from the router) mechanisms. Screen scraping is
-      error prone (since output can change) and vendor dependent. Building a
-      RIB from per-protocol MIBs is error prone since the MIB data represents
-      protocol data and not the exact information that went into the RIB.
-      Thus, just getting read-only RIB information from a router is a hard
-      task.</t>
+      error prone (since the output format can change) and vendor dependent.
+      Building a RIB from per-protocol MIBs is error prone since the MIB data
+      represents protocol data and not the exact information that went into
+      the RIB. Thus, just getting read-only RIB information from a router is a
+      hard task.</t>
 
       <t>Adding content to the RIB from an external entity can be done today
       using static configuration support provided by router vendors. However
@@ -206,16 +206,20 @@
       <t>The purpose of this draft is to specify an information model for the
       RIB. Using the information model, one can build a detailed data model
       for the RIB. And that data model could then be used by an external
-      entity to program a router.</t>
+      entity to program a network device.</t>
 
       <t>The rest of this document is organized as follows. <xref
       target="rib-data"> </xref> goes into the details of what constitutes and
-      can be programmed in a RIB. <xref target="events"></xref> provides a
-      high-level view of the events and notifications going from a network
-      device to an external entity, to update the external entity on
+      can be programmed in a RIB. Guidelines for reading and writing the RIB
+      are provided in <xref target="rib-read"></xref> and <xref
+      target="rib-write"></xref> respectively. <xref target="events"></xref>
+      provides a high-level view of the events and notifications going from a
+      network device to an external entity, to update the external entity on
       asynchronous events. The RIB grammar is specified in <xref
       target="rib-grammar"></xref>. Examples of using the RIB grammar are
-      shown in <xref target="rib-examples"></xref>.</t>
+      shown in <xref target="rib-examples"></xref>. <xref
+      target="rib-scale"></xref> covers considerations for performing RIB
+      operations at scale.</t>
 
       <section title="Conventions used in this document">
         <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -225,117 +229,160 @@
       </section>
     </section>
 
-    <section title="RIB data" toc="default">
+    <section anchor="rib-data" title="RIB data" toc="default">
       <t>This section describes the details of a RIB. It makes forward
       references to objects in the RIB grammar (<xref
-      target="rib-grammar"></xref>).</t>
+      target="rib-grammar"></xref>). A high-level description of the RIB
+      contents is as shown below.</t>
 
-      <section anchor="rib-data" title="RIB definition">
-        <t>A RIB is a logical construct controlled by an external entity. A
-        RIB contains one or more routing instances. On a network device, a RIB
-        is uniquely identified by its name. A routing instance can be in only
-        1 RIB. A routing instance, in the context of the RIB information
-        model, is a collection of routing tables, interfaces, and routing
-        parameters. A routing instance creates a logical slice of the router
-        and allows different logical slices; across a set of routers; to
-        communicate with other each. Layer 3 Virtual Private Networks (VPN),
-        Layer 2 VPNs (L2VPN) and Virtual Private Lan Service (VPLS) can be
-        modeled as routing instances. Note that modeling a Layer 2 VPN using a
-        routing instance only models the Layer-3 (RIB) aspect and does not
-        model any layer-2 information (like ARP) that might be associated with
-        the L2VPN.</t>
+      <figure>
+        <artwork name="RIB model"><![CDATA[
+                      routing-instance
 
-        <t>The set of interfaces indicates which interfaces this routing
-        instance has control over. The routing tables specify how incoming
-        traffic is to be forwarded. And the routing parameters control the
-        information in the routing tables. The intersection set of interfaces
-        of 2 routing instances MUST be the null set. In other words, an
-        interface should not be present in 2 routing instances. Thus a routing
-        instance describes the routing information and parameters across a set
-        of interfaces.</t>
+                       |             |
+                       |             | 
+                 0..N  |             | 1..N
+                       |             |
+
+                  interface(s)     RIB(s)
+
+                                     |
+                                     |
+                                     | 0..N
+
+                                   route(s)
+ ]]></artwork>
+      </figure>
+
+      <section title="RIB definition">
+        <t>A RIB is an entity that contains routes. A RIB is identified by its
+        name and a RIB is contained within a routing instance (<xref
+        target="routing-instance"></xref>). The name MUST be unique within a
+        routing instance. All routes in a given RIB MUST be of the same type
+        (e.g. IPv4). Each RIB MUST belong to some routing instance.</t>
+
+        <t>A RIB can be tagged with a MULTI_TOPOLOGY_ID. If a routing instance
+        is divided into multiple logical topologies, then the multi-topology
+        field is used to distinguish one topology from the other, so as to
+        keep routes from one topology independent of routes from another
+        topology.</t>
+
+        <t>If a routing instance contains multiple RIBs of the same type (e.g.
+        IPv4), then a MULTI_TOPOLOGY_ID MUST be associated with each such RIB.
+        Multiple RIBs are useful when describing multiple topology IGP
+        (Interior Gateway Protocol) networks (see <xref
+        target="RFC4915"></xref> and <xref target="RFC5120"></xref> ). In a
+        given routing instance, MULTI_TOPOLOGY_ID MUST be unique across RIBs
+        of the same type.</t>
+
+        <t>Each RIB can be optionally associated with a ENABLE_IP_RPF_CHECK
+        attribute that enables Reverse path forwarding (RPF) checks on all IP
+        routes in that RIB. Reverse path forwarding (RPF) check is used to
+        prevent spoofing and limit malicious traffic. For IP packets, the IP
+        source address is looked up and the rpf interface(s) associated with
+        the route for that IP source address is found. If the incoming IP
+        packet's interface matches one of the rpf interface(s), then the IP
+        packet is forwarded based on its IP destination address; otherwise,
+        the IP packet is discarded.</t>
+      </section>
+
+      <section anchor="routing-instance" title="Routing instance">
+        <t>A routing instance, in the context of the RIB information model, is
+        a collection of RIBs, interfaces, and routing parameters. A routing
+        instance creates a logical slice of the router and allows different
+        logical slices; across a set of routers; to communicate with other
+        each. Layer 3 Virtual Private Networks (VPN), Layer 2 VPNs (L2VPN) and
+        Virtual Private Lan Service (VPLS) can be modeled as routing
+        instances. Note that modeling a Layer 2 VPN using a routing instance
+        only models the Layer-3 (RIB) aspect and does not model any layer-2
+        information (like ARP) that might be associated with the L2VPN.</t>
+
+        <t>The set of interfaces indicates which interfaces are associated
+        with this routing instance. The RIBs specify how incoming traffic is
+        to be forwarded. And the routing parameters control the information in
+        the RIBs. The intersection set of interfaces of 2 routing instances
+        SHOULD be the null set. In other words, an interface MUST NOT be
+        present in 2 routing instances. Thus a routing instance describes the
+        routing information and parameters across a set of interfaces.</t>
 
         <t>A routing instance MUST contain the following mandatory
         fields.<list style="symbols">
             <t>INSTANCE_NAME: A routing instance is identified by its name,
-            INSTANCE_NAME.</t>
+            INSTANCE_NAME. This SHOULD be unique across all routing instances
+            in a given network device.</t>
 
-            <t>INSTANCE_DISTINGUISHER: Each routing instance must have a
-            unique distinguisher associated with it. It enables one to
-            distinguish routes across routing instances. The route
-            distinguisher SHOULD be unique across all routing instances in a
-            given network device. How the INSTANCE_DISTINGUISHER is allocated
-            and kept unique is outside the scope of this document. The
-            instance distinguisher maps well to BGP route-distinguisher for
-            virtual private networks (VPNs). However, the same concept can be
-            used for other use-cases as well.</t>
+            <t>INSTANCE_DISTINGUISHER: Each routing instance MUST have a
+            distinguisher associated with it. It enables one to distinguish
+            routes across routing instances. The route distinguisher MUST be
+            unique across all routing instances in a given network device. How
+            the INSTANCE_DISTINGUISHER is allocated and kept unique is outside
+            the scope of this document. The instance distinguisher maps well
+            to BGP route-distinguisher for virtual private networks (VPNs).
+            However, the same concept can be used for other use-cases as
+            well.</t>
 
-            <t>routing-table-list: This is the list of routing tables
-            associated with this routing instance. Each routing instance can
-            have multiple tables to represent routes of different types. For
-            example, one would put IPv4 routes in one table and MPLS routes in
-            another table.</t>
-          </list>A routing instance MAY contain the following optional
-        fields.<list style="symbols">
-            <t>interface-list: This represents the list of interfaces in this
-            routing instance. The interface list helps constrain the
-            boundaries of packet forwarding. Packets coming on these
-            interfaces are directly associated with the given routing
+            <t>rib-list: This is the list of RIBs associated with this routing
+            instance. Each routing instance can have multiple RIBs to
+            represent routes of different types. For example, one would put
+            IPv4 routes in one RIB and MPLS routes in another RIB.</t>
+          </list></t>
+
+        <t>A routing instance MAY contain the following optional fields.<list
+            style="symbols">
+            <t>interface-list: This represents the list of interfaces
+            associated with this routing instance. The interface list helps
+            constrain the boundaries of packet forwarding. Packets coming on
+            these interfaces are directly associated with the given routing
             instance. The interface list contains a list of identifiers, with
             each identifier uniquely identifying an interface.</t>
 
-            <t>ROUTER_ID: The router-id field identifies the router. This
-            field is to be used if one wants to virtualize a physical router
-            into multiple virtual routers. Each virtual router will have a
-            unique router-id.</t>
+            <t>ROUTER_ID: The router-id field identifies the network device in
+            control plane interactions with other network devices. This field
+            is to be used if one wants to virtualize a physical router into
+            multiple virtual routers. Each virtual router MUST have a unique
+            router-id. ROUTER_ID MUST be unique across all network devices in
+            a given domain.</t>
 
-            <t>ISO_SYSTEM_ID: For IS-IS to operate on a router, a system
-            identifier is needed. This represents the same.</t>
-
-            <t>as-data: The as-data fields is used when the routes in this
-            instance are to be tagged with certain autonomous system (AS)
-            characteristics. The RIB manager can use AS length as one of the
-            parameters for making path selection. as-data consists of a AS
-            number and an optional Confederation AS number (<xref
-            target="RFC5065"></xref>).</t>
+            <t>as-data: This is an identifier of the administrative domain to
+            which the routing instance belongs. The as-data fields is used
+            when the routes in this instance are to be tagged with certain
+            autonomous system (AS) characteristics. The RIB manager can use AS
+            length as one of the parameters for making route selection.
+            as-data consists of a AS number and an optional Confederation AS
+            number (<xref target="RFC5065"></xref>).</t>
           </list></t>
-      </section>
-
-      <section title="Routing tables">
-        <t>A routing table is an entity that contains routes. A routing table
-        is identified by its name. The name MUST be unique within a RIB. All
-        routes in a given routing table MUST be of the same type (e.g. IPv4).
-        Each routing table MUST belong to some routing instance.</t>
-
-        <t>A routing table can be tagged with a MULTI_TOPOLOGY_ID. If a
-        routing instance is divided into multiple logical topologies, then the
-        multi-topology field is used to distinguish one topology from the
-        other, so as to keep routes from one topology independent of routes
-        from another topology.</t>
-
-        <t>If a routing instance contains multiple tables of the same type
-        (e.g. IPv4), then a MULTI_TOPOLOGY_ID MUST be associated with each
-        such table. Multiple tables are useful when describing multiple
-        topology IGP (Interior Gateway Protocol) networks (see <xref
-        target="RFC4915"></xref> and <xref target="RFC5120"></xref> ). In a
-        given routing instance, MULTI_TOPOLOGY_ID MUST be unique across
-        routing tables of the same type.</t>
-
-        <t>Each route table can be optionally associated with a
-        ENABLE_IP_RPF_CHECK attribute that enables Reverse path forwarding
-        (RPF) checks on all IP routes in that table. Reverse path forwarding
-        (RPF) check is used to prevent spoofing and limit malicious traffic.
-        For IP packets, the IP source address is looked up and the rpf
-        interface(s) associated with the route for that IP source address is
-        found. If the incoming IP packet's interface matches one of the rpf
-        interface(s), then the IP packet is forwarded based on its IP
-        destination address; otherwise, the IP packet is discarded.</t>
       </section>
 
       <section title="Route">
         <t>A route is essentially a match condition and an action following
         the match. The match condition specifies the kind of route (IPv4,
-        MPLS, etc.) and the set of fields to match on. This document specifies
-        the following match types:<list style="symbols">
+        MPLS, etc.) and the set of fields to match on. <xref
+        target="route-model"></xref> represents the overall contents of a
+        route.</t>
+
+        <figure anchor="route-model" title="Route model">
+          <artwork name="Route model"><![CDATA[artwork
+                              route
+
+                              | | |
+                    +---------+ | +----------+
+                    |           |            |
+               0..N |           |            | 0..N
+                                            
+      route-attributes        match         nexthop-list
+
+                                |
+                                |
+                +-------+-------+-------+--------+
+                |       |       |       |        |
+                |       |       |       |        |
+ 
+               IPv4    IPv6    MPLS    MAC    Interface
+    ]]></artwork>
+        </figure>
+
+        <t>This document specifies the following match types:<list
+            style="symbols">
             <t>IPv4: Match on destination IP in IPv4 header</t>
 
             <t>IPv6: Match on destination IP in IPv6 header</t>
@@ -353,14 +400,16 @@
         <t>Each route can have associated with it one or more optional route
         attributes.<list style="symbols">
             <t>ROUTE_PREFERENCE: This is a numerical value that allows for
-            comparing routes from different protocols. It is also known as
-            administrative-distance. The lower the value, the higher the
-            preference. For example there can be an OSPF route for
-            192.0.2.1/32 with a preference of 5. If a controller programs a
-            route for 192.0.2.1/32 with a preference of 2, then the controller
-            entered route will be preferred by the RIB manager. Preference
-            should be used to dictate behavior. For more examples of
-            preference, see <xref target="route-preference"></xref>.</t>
+            comparing routes from different protocols (where static
+            configuration is also considered a protocol for the purpose of
+            this field). It is also known as administrative-distance. The
+            lower the value, the higher the preference. For example there can
+            be an OSPF route for 192.0.2.1/32 with a preference of 5. If a
+            controller programs a route for 192.0.2.1/32 with a preference of
+            2, then the controller entered route will be preferred by the RIB
+            manager. Preference should be used to dictate behavior. For more
+            examples of preference, see <xref
+            target="route-preference"></xref>.</t>
 
             <t>ROUTE_METRIC: Route preference is used for comparing routes
             from different protocols. Route metric is used for comparing
@@ -371,7 +420,7 @@
 
             <t>LOCAL_ONLY: This is a boolean value. If this is present, then
             it means that this route should not be exported into other RIBs or
-            other route tables.</t>
+            other RIBs.</t>
 
             <t>rpf-check-interface: Reverse path forwarding (RPF) check is
             used to prevent spoofing and limit malicious traffic. For IP
@@ -386,9 +435,8 @@
             it is received on one of the interfaces specified by the
             rpf-check-interface. If no rpf-check-interface is specified, then
             matching packets are no subject to this check. This field
-            overrides the ENABLE_IP_RPF_CHECK flag on the routing table and
-            interfaces provided in this list are used for doing the RPF
-            check.</t>
+            overrides the ENABLE_IP_RPF_CHECK flag on the RIB and interfaces
+            provided in this list are used for doing the RPF check.</t>
 
             <t>as-path: A route can have an as-path associated with it to
             indicate which set of autonomous systems has to be traversed to
@@ -430,6 +478,47 @@
         nexthop gets resolved, the RIB manager will send a notification of the
         same (see <xref target="events"></xref> ).</t>
 
+        <t>The overall structure and usage of a nexthop is as shown in the
+        figure below.</t>
+
+        <figure>
+          <artwork name="Nexthop model"><![CDATA[                            
+                              route
+
+                                | 
+                                | 0..N
+
+                           nexthop-list 
+                    
+                                |            
+             +------------------+------------------+
+       1..N  |                                     |
+             |                                     |
+         
+      nexthop-list-member                    special-nexthop
+
+             |
+             |
+           
+        nexthop-chain
+
+             |
+       1..N  |
+
+          nexthop
+
+             |
+             +------- nexthop-attributes
+             |
+             |
+    +--------+------+------------------+------------------+
+    |               |                  |                  |
+    |               |                  |                  |
+ 
+ nexthop-id   egress-interface    logical-tunnel     tunnel-encap
+    ]]></artwork>
+        </figure>
+
         <t>Nexthops can be identified by an identifier to create a level of
         indirection. The identifier is set by the RIB manager and returned to
         the external entity on request. The RIB data-model SHOULD support a
@@ -469,11 +558,12 @@
               <t>Special nexthops - for performing specific well-defined
               functions</t>
             </list>It is expected that all network devices will have a limit
-          on recursion and not all hardware will be able to support all kinds
-          of nexthops. RIB capability negotiation becomes very important for
-          this reason and a RIB data-model MUST specify a way for an external
-          entity to learn about the network device's capabilities. Examples of
-          when and how to use various kinds of nexthops are shown in <xref
+          on how many levels of lookup can be performed and not all hardware
+          will be able to support all kinds of nexthops. RIB capability
+          negotiation becomes very important for this reason and a RIB
+          data-model MUST specify a way for an external entity to learn about
+          the network device's capabilities. Examples of when and how to use
+          various kinds of nexthops are shown in <xref
           target="nexthop-examples"></xref>.</t>
 
           <t>Tunnel nexthops allow an external entity to program static tunnel
@@ -532,6 +622,14 @@
               load-balancing and if applied, MUST be applied to all member
               nexthops.</t>
             </list></t>
+
+          <t>A nexthop list MAY contain elements that have both
+          PROTECTION_PREFERENCE and LOAD_BALANCE_WEIGHT set. When both are
+          set, it means under normal operation the network device should load
+          balance the traffic over all nexthops with a protection preference
+          of 1. And when all nexthops with a protection preference of 1 are
+          down (or unavailable), then traffic MUST be load balanced over
+          elements with protection preference of 2.</t>
         </section>
 
         <section title="Nexthop content">
@@ -546,15 +644,15 @@
 
               <t>address: This can be an IP address or MAC address or ISO
               address.<list style="symbols">
-                  <t>An optional table name can also be specified to indicate
-                  the table in which the address is to be looked up further.
-                  One can use the table name field to direct the packet from
-                  one domain into another domain. For example, a MPLS packet
-                  coming in on an interface would be looked up in a MPLS
-                  routing table and the nexthop for that could indicate that
-                  we strip the MPLS label and do a subsequent IPv4 lookup in
-                  an IPv4 table. By default the table will be the same in
-                  which the route lookup was performed.</t>
+                  <t>An optional RIB name can also be specified to indicate
+                  the RIB in which the address is to be looked up further. One
+                  can use the RIB name field to direct the packet from one
+                  domain into another domain. For example, a MPLS packet
+                  coming in on an interface would be looked up in a MPLS RIB
+                  and the nexthop for that could indicate that we strip the
+                  MPLS label and do a subsequent IPv4 lookup in an IPv4 RIB.
+                  By default the RIB will be the same in which the route
+                  lookup was performed.</t>
 
                   <t>An optional egress interface can be specified to indicate
                   which interface to send the packet out on. The egress
@@ -574,10 +672,9 @@
               others as defined in this document), that is represented by a
               unique identifier (E.g. name).</t>
 
-              <t>ROUTING_TABLE_NAME: This is a routing table that exists in
-              the RIB. A nexthop pointing to a table indicates that the route
-              lookup needs to continue in the specified table. This is a way
-              to perform chained lookups.</t>
+              <t>RIB_NAME: A nexthop pointing to a RIB indicates that the
+              route lookup needs to continue in the specified RIB. This is a
+              way to perform chained lookups.</t>
             </list></t>
         </section>
 
@@ -652,7 +749,7 @@
       </section>
     </section>
 
-    <section title="Reading from the RIB">
+    <section anchor="rib-read" title="Reading from the RIB">
       <t>A RIB data-model MUST allow an external entity to read entries, for
       RIBs created by that entity. The network device administrator MAY allow
       reading of other RIBs by an external entity through access lists on the
@@ -679,7 +776,7 @@
       data-model MUST support requesting identifiers for nexthops and
       collecting the identifiers back in the response.</t>
 
-      <t>Route programming in the RIB SHOULD result in a return code that
+      <t>Route programming in the RIB MUST result in a return code that
       contains the following attributes:<list style="symbols">
           <t>Installed - Yes/No (Indicates whether the route got installed in
           the FIB)</t>
@@ -716,22 +813,20 @@
 
       <figure>
         <artwork><![CDATA[
-<rib> ::= <RIB_NAME> <routing-instance> [<routing-instance> ...]
 <routing-instance> ::= <INSTANCE_NAME> <INSTANCE_DISTINGUISHER>
-                       [<interface-list>] <routing-table-list>
-                       [<ROUTER_ID>] [<ISO_SYSTEM_ID>] 
-                       [<as-data>]
+                       [<interface-list>] <rib-list>
+                       [<ROUTER_ID>] [<as-data>]
 
 <as-data> ::= <AS_NUMBER> [<CONFEDERATION_AS>]
 
 <interface-list> ::= (<INTERFACE_IDENTIFIER> ...)
 
-<routing-table-list> ::= (<routing-table> ...)
-<routing-table> ::= <ROUTING_TABLE_NAME> <table-family>
+<rib-list> ::= (<rib> ...)
+<rib> ::= <RIB_NAME> <rib-family>
                     [<route> ... ] [<MULTI_TOPOLOGY_ID>]
                     [ENABLE_IP_RPF_CHECK]
-<table-family> ::= <IPV4_TABLE_FAMILY> | <IPV6_TABLE_FAMILY> |
-                   <MPLS_TABLE_FAMILY> | <IEEE_MAC_TABLE_FAMILY>
+<rib-family> ::= <IPV4_RIB_FAMILY> | <IPV6_RIB_FAMILY> |
+                 <MPLS_RIB_FAMILY> | <IEEE_MAC_RIB_FAMILY>
 
 <route> ::= <match> <nexthop-list>
             [<route-attributes>]
@@ -740,10 +835,13 @@
 
 <match> ::= <ipv4-route> | <ipv6-route> | <mpls-route> | 
             <mac-route> | <interface-route>
-<ipv4-route> ::= <IPV4_ADDRESS> <IPV4_PREFIX_LENGTH>
-                 [<multicast-source-ipv4-address>]
-<ipv6-route> ::= <IPV6_ADDRESS> <IPV6_PREFIX_LENGTH>
-                 [<multicast-source-ipv6-address>]
+
+<ipv4-route> ::= <ipv4-prefix> [<multicast-source-ipv4-address>]
+<ipv4-prefix> ::= <IPV4_ADDRESS> <IPV4_ADDRESS_LENGTH>
+
+<ipv6-route> ::= <ipv6-prefix> [<multicast-source-ipv6-address>]
+<ipv6-prefix> ::= <IPV6_ADDRESS> <IPV6_PREFIX_LENGTH>                 
+
 <mpls-route> ::= <MPLS> <MPLS_LABEL>
 <mac-route> ::= <IEEE_MAC> ( <MAC_ADDRESS> )
 <interface-route> ::= <INTERFACE> <INTERFACE_IDENTIFIER>
@@ -785,12 +883,12 @@
 
 <nexthop-chain> ::= (<nexthop> ...)
 <nexthop-chain-identifier> ::= <NEXTHOP_NAME> | <NEXTHOP_ID>
-<nexthop> ::= (<nexthop-identifier> | <EGRESS_IDENTIFIER> |
+<nexthop> ::= (<nexthop-identifier> | <EGRESS_INTERFACE> |
                (<nexthop-address> 
-                  ([<ROUTING_TABLE_NAME>] | [<EGRESS_INTERFACE>])) |
+                  ([<RIB_NAME>] | [<EGRESS_INTERFACE>])) |
                (<tunnel-encap> [<EGRESS_INTERFACE>]) |
                <logical-tunnel> |
-               <ROUTING_TABLE_NAME>)
+               <RIB_NAME>)
                [<nexthop-attributes>]
                [<nexthop-vendor-attributes>]
 
@@ -854,7 +952,9 @@
         can install a route with route preference of 20 to the same
         destination. The OSPF route will get precedence and will get installed
         in the FIB. When the OSPF route goes away (for any reason), the
-        protection path will get installed in the FIB.</t>
+        protection path will get installed in the FIB. If the hardware
+        supports it, then the RIB manager can choose to pre-install both
+        routes, with the OSPF nexthop getting preference.</t>
 
         <t>Route preference can also be used to prevent denial of service
         attacks by installing routes with the best preference, which either
@@ -863,12 +963,12 @@
         will supersede any route installed by any other protocol.</t>
 
         <t>Route metric is used to disambiguate between 2 or more routes to
-        the same destination with the same preference and in the same route
-        table. One usage of this is to install 2 routes, each with a different
-        nexthop. The preferred nexthop is given a better metric than the other
-        one. This results in traffic being forwarded to the preferred nexthop.
-        If the preferred nexthop fails, then the RIB manager will
-        automatically install a route to the other nexthop.</t>
+        the same destination with the same preference and in the same RIB. One
+        usage of this is to install 2 routes, each with a different nexthop.
+        The preferred nexthop is given a better metric than the other one.
+        This results in traffic being forwarded to the preferred nexthop. If
+        the preferred nexthop fails, then the RIB manager will automatically
+        install a route to the other nexthop.</t>
       </section>
 
       <section anchor="nexthop-examples"
@@ -909,9 +1009,9 @@ The above can be derived from the grammar as follows:
 
         <section title="Weighted lists">
           <t>A weighted list is used to load-balance traffic among a set of
-          nexthops. A weighted list is very similar to a replication list,
-          with the difference that each member nexthop MUST have a
-          LOAD_BALANCE_WEIGHT associated with it.</t>
+          nexthops. From a modeling perspective, a weighted list is very
+          similar to a replication list, with the difference that each member
+          nexthop MUST have a LOAD_BALANCE_WEIGHT associated with it.</t>
 
           <t>A weighted list (at the simplest level) can be represented
           as:</t>
@@ -997,8 +1097,8 @@ The above can be derived from the grammar as follows:
           such a construct is to replicate traffic to multiple destinations,
           with high availability. In other words, for each destination you
           have a primary and backup nexthop (replication list) to ensure there
-          is no traffic drop in case of a failure. So the outer list is a list
-          of destinations and the inner lists are replication lists of
+          is no traffic drop in case of a failure. So the outer list is a
+          protection list and the inner lists are replication lists of
           primary/backup nexthops.</t>
         </section>
       </section>
@@ -1033,19 +1133,19 @@ The above can be derived from the grammar as follows:
         <figure>
           <artwork><![CDATA[
 Server:
-<route> ::= <routing-table-name> <match> (<edge-router> 
+<route> ::= <rib-name> <match> (<edge-router> 
                                           <edge-router-interface>)
-<route> ::= <routing-table-name> <198.51.100.1/16> 
+<route> ::= <rib-name> <198.51.100.1/16> 
                   (<MPLS> <mpls-header>)
                   (<GRE> <gre-header>) 
 
-<route> ::- <routing-table-name> <198.51.100.1/16>
+<route> ::- <rib-name> <198.51.100.1/16>
                   (<MPLS_PUSH> <100>)
                   (<GRE> <192.0.2.10> <GRE_PROTOCOL_MPLS>)             
 
 Edge Router:
-<route> ::= <mpls-routing-table> <mpls-route> <nexthop>
-<route> ::= <mpls-routing-table> (<MPLS> <100>) <interface-10>
+<route> ::= <mpls-rib> <mpls-route> <nexthop>
+<route> ::= <mpls-rib> (<MPLS> <100>) <interface-10>
 
 In the above case, the label 100 identifies the egress interface
 on the edge router.
@@ -1057,15 +1157,16 @@ on the edge router.
       </section>
     </section>
 
-    <section title="RIB operations at scale">
+    <section anchor="rib-scale" title="RIB operations at scale">
       <t>This section discusses the scale requirements for a RIB data-model.
       The RIB data-model should be able to handle large scale of operations,
       to enable deployment of RIB applications in large networks.</t>
 
       <section title="RIB reads">
         <t>Bulking (grouping of multiple objects in a single message) MUST be
-        supported when a network device sends RIB data to an external
-        entity.</t>
+        supported when a network device sends RIB data to an external entity.
+        Similarly the data model MUST enable a RIB client to request data in
+        bulk from a network device.</t>
       </section>
 
       <section title="RIB writes">
@@ -1088,11 +1189,11 @@ on the edge router.
 
     <section title="Security Considerations">
       <t>All interactions between a RIB manager and an external entity MUST be
-      authenticated. The RIB manager MUST protect itself against a denial of
-      service attack by a rouge external entity, by throttling request
-      processing. A RIB manager MUST enforce limits on how much data can be
-      programmed by an external entity and return error when such a limit is
-      reached.</t>
+      authenticated and authorized. The RIB manager MUST protect itself
+      against a denial of service attack by a rogue external entity, by
+      throttling request processing. A RIB manager MUST enforce limits on how
+      much data can be programmed by an external entity and return error when
+      such a limit is reached.</t>
 
       <t>The RIB manager MUST expose a data-model that it implements. An
       external agent MUST send requests to the RIB manager that comply with
@@ -1105,12 +1206,12 @@ on the edge router.
     </section>
 
     <section title="Acknowledgements">
-      <t>The authors would like to thank Alia Atlas, Edward Crabbe, Hariharan
-      Ananthakrishnan, Jeff Haas and Ina Minei on their comments and
-      suggestions on this draft. The following people contributed to the
-      design of the RIB model as part of the I2RS Interim meeting in April
-      2013 - Wes George, Chris Liljenstolpe, Jeff Tantsura, Sriganesh Kini,
-      Susan Hares, Fabian Schneider and Nitin Bahadur.</t>
+      <t>The authors would like to thank the working group co-chairs and
+      reviewers on their comments and suggestions on this draft. The following
+      people contributed to the design of the RIB model as part of the I2RS
+      Interim meeting in April 2013 - Wes George, Chris Liljenstolpe, Jeff
+      Tantsura, Sriganesh Kini, Susan Hares, Fabian Schneider and Nitin
+      Bahadur.</t>
     </section>
   </middle>
 
