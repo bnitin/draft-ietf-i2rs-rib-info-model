@@ -2,7 +2,6 @@
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
 <!DOCTYPE rfc SYSTEM "rfc3978.dtd" [
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
-<!ENTITY RFC3443 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3443.xml">
 <!ENTITY RFC4271 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4271.xml">
 <!ENTITY RFC4915 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4915.xml">
 <!ENTITY RFC5065 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5065.xml">
@@ -235,7 +234,7 @@
       target="rib-grammar"></xref>). A high-level description of the RIB
       contents is as shown below.</t>
 
-      <figure title="RIB model">
+      <figure anchor="rib-model" title="RIB model">
         <artwork name="RIB model"><![CDATA[
                       routing-instance
 
@@ -467,7 +466,7 @@
         <t>The overall structure and usage of a nexthop is as shown in the
         figure below.</t>
 
-        <figure>
+        <figure anchor="nexthop-model" title="Nexthop model">
           <artwork name="Nexthop model"><![CDATA[                            
                               route
 
@@ -746,7 +745,7 @@
       <t>This section specifies the RIB information model in Routing
       Backus-Naur Form <xref target="RFC5511"></xref>.</t>
 
-      <figure title="RIB rBNF grammar">
+      <figure anchor="rib-grammer-details" title="RIB rBNF grammar">
         <artwork><![CDATA[
 <routing-instance> ::= <INSTANCE_NAME>
                        [<interface-list>] <rib-list>
@@ -1144,8 +1143,6 @@ on the edge router.
     </references>
 
     <references title="Informative References">
-      &RFC3443;
-
       &RFC4271;
 
       &RFC4915;
