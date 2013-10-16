@@ -89,7 +89,7 @@
       </address>
     </author>
 
-    <date day="10" month="October" year="2013" />
+    <date day="18" month="October" year="2013" />
 
     <area>Routing</area>
 
@@ -215,10 +215,11 @@
       provides a high-level view of the events and notifications going from a
       network device to an external entity, to update the external entity on
       asynchronous events. The RIB grammar is specified in <xref
-      target="rib-grammar"></xref>. Examples of using the RIB grammar are
-      shown in <xref target="rib-examples"></xref>. <xref
-      target="rib-scale"></xref> covers considerations for performing RIB
-      operations at scale.</t>
+      target="rib-grammar"></xref>. <xref
+      target="inter-domain-extensions"></xref> extends the RIB for use in
+      inter-domain cases. Examples of using the RIB grammar are shown in <xref
+      target="rib-examples"></xref>. <xref target="rib-scale"></xref> covers
+      considerations for performing RIB operations at scale.</t>
 
       <section title="Conventions used in this document">
         <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -331,14 +332,6 @@
             multiple virtual routers. Each virtual router MUST have a unique
             router-id. ROUTER_ID MUST be unique across all network devices in
             a given domain.</t>
-
-            <t>as-data: This is an identifier of the administrative domain to
-            which the routing instance belongs. The as-data fields is used
-            when the routes in this instance are to be tagged with certain
-            autonomous system (AS) characteristics. The RIB manager can use AS
-            length as one of the parameters for making route selection.
-            as-data consists of a AS number and an optional Confederation AS
-            number (<xref target="RFC5065"></xref>).</t>
           </list></t>
       </section>
 
@@ -422,17 +415,6 @@
             matching packets are no subject to this check. This field
             overrides the ENABLE_IP_RPF_CHECK flag on the RIB and interfaces
             provided in this list are used for doing the RPF check.</t>
-
-            <t>as-path: A route can have an as-path associated with it to
-            indicate which set of autonomous systems has to be traversed to
-            reach the final destination. The as-path attribute can be used by
-            the RIB manager in multiple ways. The RIB manager can choose paths
-            with lower as-path length. Or the RIB manager can choose to not
-            install paths going via a particular AS. How exactly the RIB
-            manager uses the as-path is outside the scope of this document.
-            For details of how the as-path is formed, see Section 5.1.2 of
-            <xref target="RFC4271"></xref> and Section 3 of <xref
-            target="RFC5065"></xref>.</t>
 
             <t>route-vendor-attributes: Vendors can specify vendor-specific
             attributes using this. The details of this field is outside the
@@ -749,9 +731,7 @@
         <artwork><![CDATA[
 <routing-instance> ::= <INSTANCE_NAME>
                        [<interface-list>] <rib-list>
-                       [<ROUTER_ID>] [<as-data>]
-
-<as-data> ::= <AS_NUMBER> [<CONFEDERATION_AS>]
+                       [<ROUTER_ID>]
 
 <interface-list> ::= (<INTERFACE_IDENTIFIER> ...)
 
@@ -797,13 +777,7 @@
 <address-family-route-attributes> ::= <ip-route-attributes> | 
                                       <mpls-route-attributes> | 
                                       <ethernet-route-attributes>
-<ip-route-attributes> ::= [<as-path>] [<rpf-check-interface>]
-<as-path> ::= (<as-path-segment-type> <as-list>) [<as-path> ...]
-<as-path-segment-type> ::= <AS_SET> | <AS_SEQUENCE> | 
-                           <AS_CONFED_SEQUENCE> | <AS_CONFED_SET>
-<as-list> ::= (<AS_NUMBER> ...) [<as-path>]
-
-
+<ip-route-attributes> ::= [<rpf-check-interface>]
 <rpf-check-interface> ::= <interface-list>
 
 <mpls-route-attributes> ::= [<rpf-check-interface>]
@@ -869,6 +843,64 @@
 
 ]]></artwork>
       </figure>
+    </section>
+
+    <section anchor="inter-domain-extensions"
+             title="Inter-domain extensions to the RIB">
+      <t>This section describes inter-domain extensions to the Routing
+      Information Base to allow an external entity to learn about and program
+      inter-domain information associated with the RIB and it's routes. In the
+      absence of this extension, the network device MUST NOT return any routes
+      that have inter-domain information associated (such as autonomous-system
+      path information).</t>
+
+      <section title="Extension to Routing Instance">
+        <t>A routing instance is augmented with an optional parameter called
+        as-data.</t>
+
+        <t>as-data is an identifier of the administrative domain to which the
+        routing instance belongs. The as-data fields is used when the routes
+        in this instance are to be tagged with certain autonomous system (AS)
+        characteristics. The RIB manager can use AS length as one of the
+        parameters for making route selection. as-data consists of a AS number
+        and an optional Confederation AS number (<xref
+        target="RFC5065"></xref>).</t>
+      </section>
+
+      <section title="Extension to Route">
+        <t>Routes are augmented with an optional parameter called as-path.</t>
+
+        <t>A route can have an as-path associated with it to indicate which
+        set of autonomous systems has to be traversed to reach the final
+        destination. The as-path attribute can be used by the RIB manager in
+        multiple ways. The RIB manager can choose paths with lower as-path
+        length. Or the RIB manager can choose to not install paths going via a
+        particular AS. How exactly the RIB manager uses the as-path is outside
+        the scope of this document. For details of how the as-path is formed,
+        see Section 5.1.2 of <xref target="RFC4271"></xref> and Section 3 of
+        <xref target="RFC5065"></xref>.</t>
+      </section>
+
+      <section title="Inter-domain extensions to RIB grammar">
+        <figure anchor="rib-grammer-inter-domain-details"
+                title="RIB rBNF grammar - Inter-domain extensions">
+          <artwork><![CDATA[
+<routing-instance> ::= <INSTANCE_NAME>
+                       [<interface-list>] <rib-list>
+                       [<ROUTER_ID>] [<as-data>]
+
+<as-data> ::= <AS_NUMBER> [<CONFEDERATION_AS>]
+
+<ip-route-attributes> ::= [<rpf-check-interface>] [<as-path>]
+<as-path> ::= (<as-path-segment-type> <as-list>) [<as-path> ...]
+<as-path-segment-type> ::= <AS_SET> | <AS_SEQUENCE> | 
+                           <AS_CONFED_SEQUENCE> | <AS_CONFED_SET>
+<as-list> ::= (<AS_NUMBER> ...) [<as-path>]
+
+
+]]></artwork>
+        </figure>
+      </section>
     </section>
 
     <section anchor="rib-examples" title="Using the RIB grammar">
