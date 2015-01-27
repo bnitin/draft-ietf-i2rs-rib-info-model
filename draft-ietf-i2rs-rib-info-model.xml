@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="US-ASCII"?>
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
-<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
-<!ENTITY RFC4271 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4271.xml">
-<!ENTITY RFC4915 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.4915.xml">
-<!ENTITY RFC5065 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5065.xml">
-<!ENTITY RFC5120 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5120.xml">
-<!ENTITY RFC5511 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.5511.xml">
-<!ENTITY RFC6020 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6020.xml">
-<!ENTITY I2RS-USE-CASES SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.white-i2rs-use-case.xml">
-<!ENTITY I2RS-PROBLEM-STATEMENT SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-i2rs-problem-statement.xml">
-<!ENTITY I2RS-VN-VC SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.hares-i2rs-use-case-vn-vc.xml">
+<!ENTITY RFC2119 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC4271 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4271.xml">
+<!ENTITY RFC4915 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.4915.xml">
+<!ENTITY RFC5065 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5065.xml">
+<!ENTITY RFC5120 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5120.xml">
+<!ENTITY RFC5511 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5511.xml">
+<!ENTITY RFC6020 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6020.xml">
+<!ENTITY I2RS-USE-CASES SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml3/reference.I-D.white-i2rs-use-case.xml">
+<!ENTITY I2RS-PROBLEM-STATEMENT SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-i2rs-problem-statement.xml">
+<!ENTITY I2RS-VN-VC SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml3/reference.I-D.hares-i2rs-use-case-vn-vc.xml">
 ]>
 <?rfc toc="yes"?>
 <?rfc sortrefs="yes"?>
@@ -18,7 +18,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-03"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-04"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -88,7 +88,7 @@
 
     <!---->
 
-    <date day="22" month="May" year="2014" />
+    <date day="3" month="December" year="2014" />
 
     <area>Routing</area>
 
