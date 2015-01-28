@@ -18,7 +18,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-04"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-05"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -82,13 +82,13 @@
       <organization>Cisco</organization>
 
       <address>
-        <email>jmedved@cisco.co</email>
+        <email>jmedved@cisco.com</email>
       </address>
     </author>
 
     <!---->
 
-    <date day="3" month="December" year="2014" />
+    <date day="31" month="January" year="2015" />
 
     <area>Routing</area>
 
@@ -774,9 +774,12 @@
 <route-vendor-attributes> ::= <>
 
 
-<nexthop-list> ::= <special-nexthop> | 
-                   ((<nexthop-list-member>) | 
-                    ([<nexthop-list-member> ... ] <nexthop-list> ))
+<nexthop-list> ::= <special-nexthop> |
+                   ((<nexthop-list> <nexthop-list-attr>) ...) |
+                   (<nexthop-list-member> ...)
+
+<nexthop-list-attributes> ::= [<PROTECTION_PREFERENCE>]
+                              [<LOAD_BALANCE_WEIGHT>]
 
 
 <nexthop-list-member> ::= (<nexthop-chain> | 
@@ -790,8 +793,7 @@
 <nexthop-chain-identifier> ::= <NEXTHOP_NAME> | <NEXTHOP_ID>
 <nexthop> ::= (<nexthop-identifier> | <EGRESS_INTERFACE> |
                <ipv4-address> | <ipv6-address> |
-               (<EGRESS_INTERFACE> (<ipv4-address> | <ipv6-address>)
-                [RIB_NAME]) |
+               (<EGRESS_INTERFACE> (<ipv4-address> | <ipv6-address>)) |
                (<EGRESS_INTERFACE> <IEEE_MAC_ADDRESS>) |
                (<tunnel-encap> [<EGRESS_INTERFACE>]) |
                <logical-tunnel> |
@@ -840,6 +842,33 @@
 
 ]]></artwork>
       </figure>
+
+      <section title="Nexthop grammar explained">
+        <t>A nexthop-list can be a special-nexthop like DISCARD or it can be
+        complex nexthop containing one or more lists. The nexthop-list has
+        recursion built-in to address complex use-cases like the one defined
+        in <xref target="lists-of-lists"></xref>. When recursion is used, one
+        can specify the &lt;nexthop-list-attributes&gt; attributes if one
+        desires load-balancing or primary/backup like feature. If neither
+        attribute is specified, then it implies that multicast (send to all)
+        is desired.</t>
+
+        <t>Protection preference and load balancing are also associated with
+        the nexthop-list-member. See <xref target="lists-of-lists"></xref> for
+        an example.</t>
+
+        <t>Specifying the nexthop attributes (&lt;nexthop-list-attribute&gt;
+        or &lt;nexthop-list-member-attribute&gt;) at the beginning of the
+        construct helps clearly indicate whether one is defining a set of
+        constructs for doing protection or load balancing or multicast.
+        Placing the attribute at the inner level &lt;nexthop&gt; would cause
+        issues since the attribute would need to be consistent (and
+        duplicated) across various members of (for example) the load-balance
+        list and only after parsing the inner level &lt;nexthop&gt; one would
+        realize that it was load-balancing that the caller desired.</t>
+
+        <t></t>
+      </section>
     </section>
 
     <section anchor="rib-examples" title="Using the RIB grammar">
@@ -974,6 +1003,8 @@ The above can be derived from the grammar as follows:
           programming of the nexthop into independent pieces - one per
           encapsulation.</t>
 
+          <t>Elements in a nexthop-chain are evaluated left to right.</t>
+
           <t>A simple example of MPLS over GRE can be represented as:</t>
 
           <figure>
@@ -993,14 +1024,92 @@ The above can be derived from the grammar as follows:
           </figure>
         </section>
 
-        <section title="Lists of lists">
+        <section anchor="lists-of-lists" title="Lists of lists">
           <t>Lists of lists is a complex construct. One example of usage of
           such a construct is to replicate traffic to multiple destinations,
           with high availability. In other words, for each destination you
           have a primary and backup nexthop (replication list) to ensure there
           is no traffic drop in case of a failure. So the outer list is a
-          protection list and the inner lists are replication lists of
+          multicast list and the inner lists are protection lists of
           primary/backup nexthops.</t>
+
+          <figure>
+            <artwork><![CDATA[
+<nexthop-list> ::= (<outgoing-1> <outgoing-1-backup>)
+                   (<outgoing-2> <outgoing-2-backup>)
+
+The above can be derived from the grammar as follows:
+
+<nexthop-list> ::= (<nexthop-list>) (<nexthop-list>)
+<nexthop-list> ::= (<nexthop-list-member> <nexthop-list-member>)
+                   (<nexthop-list>)
+<nexthop-list> ::= ((<nexthop-chain> <nexthop-list-member-attributes>)
+                     <nexthop-chain> <nexthop-list-member-attributes>))
+                   (<nexthop-list>)
+<nexthop-list> ::= ((<nexthop-chain> <PROTECTION_PREFERENCE>) 
+                    (<nexthop-chain> <PROTECTION_PREFERENCE>))
+                   (<nexthop-list>)
+<nexthop-list> ::= ((<nexthop-chain> <1>) (<nexthop-chain> <2>))
+                   (<nexthop-list>)
+<nexthop-list> ::= ((<nexthop> <1>) (<nexthop> <2>))
+                   (<nexthop-list>)
+<nexthop-list> ::= ((<EGRESS_INTERFACE> <1>) (<EGRESS_INTERFACE> <2>))
+                   (<nexthop-list>)
+<nexthop-list> ::= ((<eth1> <1>) (<eth2> <2>)) (<nexthop-list>)
+
+
+// Like above, the <nexthop-list> member on the right can be expanded
+   to give:
+
+<nexthop-list> ::= ((<eth1> <1>) (<eth2> <2>))
+                   ((<eth3> <1>) (<eth4> <2>))
+
+Above, eth1 and eth3 are primary multicast interfaces and eth2 and eth4 
+are their respective backup interfaces.
+
+]]></artwork>
+          </figure>
+
+          <t>Another example of list of lists would be ECMP (load-balancing
+          traffic across 2 nexthops), wherein each nexthop itself is an
+          aggregated high-level interface (i.e. load-balance the traffic
+          across the components of the nexthop itself). See below for the
+          derivation.</t>
+
+          <figure>
+            <artwork><![CDATA[
+<nexthop-list> ::= (<eth1 <0.5>) ((<eth2> <0.5> <eth3> <0.5>) <0.5>)
+
+The above asks for sending 50% traffic to eth1 interface,
+25% (50% of 50%) to eth2 and 25% to eth3.
+
+
+<nexthop-list> ::= (<nexthop-list> <nexthop-list-attributes) 
+                   (<nexthop-list> <nexthop-list-attributes)
+<nexthop-list> ::= ((<nexthop-list> <LOAD_BALANCE_WEIGHT>)
+                    (<nexthop-list> <LOAD_BALANCE_WEIGHT>)
+<nexthop-list> ::= ((<nexthop-list> <0.5>) (<nexthop-list> <0.5>)
+<nexthop-list> ::= ((<nexthop-list-member> <0.5>) (<nexthop-list> <0.5>)
+<nexthop-list> ::= ((<nexthop-chain> <0.5>) (<nexthop-list> <0.5>)
+<nexthop-list> ::= ((<nexthop> <0.5>) (<nexthop-list> <0.5>)
+<nexthop-list> ::= ((<EGRESS_INTERFACE> <0.5>) (<nexthop-list> <0.5>)
+<nexthop-list> ::= ((<eth1> <0.5>) (<nexthop-list> <0.5>)
+
+<nexthop-list> ::= ((<eth1> <0.5>)
+                   ((<nexthop-list-member> <nexthop-list-member>) <0.5>)
+<nexthop-list> ::= ((<eth1> <0.5>)
+                   ((<nexthop-chain> <0.5> <nexthop-chain> <0.5>) <0.5>)
+<nexthop-list> ::= ((<eth1> <0.5>)
+                   ((<nexthop> <0.5> <nexthop> <0.5>) <0.5>)
+<nexthop-list> ::= ((<eth1> <0.5>) ((<eth2> <0.5> <eth3> <0.5>) <0.5>)
+
+One can make this example even more complicated by adding protection
+nexthops for one or more of the eth interfaces.
+
+]]></artwork>
+          </figure>
+
+          <t></t>
         </section>
       </section>
 
