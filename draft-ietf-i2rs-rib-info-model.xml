@@ -18,7 +18,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-07"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-08"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -29,13 +29,13 @@
 
       <address>
         <postal>
-          <street>320 Soquel Way</street>
+          <street>150 West Evelyn Ave, Suite 200</street>
 
-          <city>Sunnyvale</city>
+          <city>Mountain View</city>
 
           <region>CA</region>
 
-          <code>94085</code>
+          <code>94041</code>
 
           <country>US</country>
         </postal>
@@ -63,7 +63,7 @@
 
     <!---->
 
-    <date day="30" month="September" year="2015" />
+    <date day="14" month="October" year="2015" />
 
     <area>Routing</area>
 
@@ -429,15 +429,15 @@
          |                   |
          |             nexthop-chain
          |                   |
-special-nexthop              | 1..N
+ special-nexthop             | 1..N
                              |
                     nexthop-chain-member
                              |
                              |
-    +---------------+--------+---------+------------------+
-    |               |                  |                  |
-    |               |                  |                  |
- nexthop-id   egress-interface    logical-tunnel     tunnel-encap
+    +---------------+--------+--------+--------------+-----------+
+    |               |                 |              |           |
+    |               |                 |              |           |
+ nexthop-id  egress-interface  logical-tunnel  tunnel-encap tunnel-decap
     ]]></artwork>
         </figure>
 
@@ -519,7 +519,11 @@ special-nexthop              | 1..N
               is an integer value between 1 and 99. A lower value indicates
               higher preference. To download a primary/standby pair to the
               FIB, the nexthops that are resolved and have two highest
-              preferences are selected.</t>
+              preferences are selected. Each &lt;NEXTHOP_PREFERENCE&gt;should
+              have a unique value within a &lt;nexthop-protection&gt; <list
+                  style="symbols">
+                  <t></t>
+                </list>(<xref target="rib-grammar"></xref>).</t>
 
               <t>NEXTHOP_LB_WEIGHT: This is used for load-balancing. Each list
               member MUST be assigned a weight between 1 and 99. The weight
@@ -537,8 +541,7 @@ special-nexthop              | 1..N
           <t>At the lowest level, a nexthop can be one of:<list
               style="symbols">
               <t>identifier: This is an identifier returned by the network
-              device representing another nexthop or another nexthop
-              chain.</t>
+              device representing another nexthop.</t>
 
               <t>EGRESS_INTERFACE: This represents a physical, logical or
               virtual interface on the network device. Address resolution must
@@ -564,10 +567,14 @@ special-nexthop              | 1..N
 
               <t>tunnel encap: This can be an encap representing an IP tunnel
               or MPLS tunnel or others as defined in this document. An
-              optional egress interface can be specified to indicate which
-              interface to send the packet out on. The egress interface is
-              useful when the network device contains Ethernet interfaces and
-              one needs to perform address resolution for the IP packet.</t>
+              optional egress interface can be chained to the tunnel encap to
+              indicate which interface to send the packet out on. The egress
+              interface is useful when the network device contains Ethernet
+              interfaces and one needs to perform address resolution for the
+              IP packet.</t>
+
+              <t>tunnel decap: This is to specify decapsulating a tunnel
+              header</t>
 
               <t>logical tunnel: This can be a MPLS LSP or a GRE tunnel (or
               others as defined in this document), that is represented by a
@@ -625,7 +632,7 @@ special-nexthop              | 1..N
 
       <t>When writing an object to a RIB, the external entity SHOULD try to
       write all dependencies of the object prior to sending that object. The
-      data-model MUST support requesting identifiers for nexthops and
+      data-model SHOULD support requesting identifiers for nexthops and
       collecting the identifiers back in the response.</t>
 
       <t>Route programming in the RIB MUST result in a return code that
@@ -642,7 +649,7 @@ special-nexthop              | 1..N
       without having to change objects that depend on it and without affecting
       any data forwarding. To change a non-modifiable object, one will need to
       create a new object and delete the old one. For example, routes that use
-      a nexthop that is identified by a nexthop-identifier should be
+      a nexthop that is identified by a nexthop identifier should be
       unaffected when the contents of that nexthop changes.</t>
     </section>
 
@@ -667,7 +674,7 @@ special-nexthop              | 1..N
       all the detail provided by the english text. When there is a lack of
       clarity in the grammar the english text will take precedence.</t>
 
-      <figure anchor="rib-grammer-details" title="RIB rBNF grammar">
+      <figure anchor="rib-grammar-details" title="RIB rBNF grammar">
         <artwork><![CDATA[
 <routing-instance> ::= <INSTANCE_NAME>
                        [<interface-list>] <rib-list>
@@ -690,8 +697,6 @@ special-nexthop              | 1..N
             [<route-vendor-attributes>]
 
 
-<match> ::= <route-type> (<ipv4-route> | <ipv6-route> | <mpls-route> | 
-                          <mac-route> | <interface-route>)
 <match> ::= <IPV4> <ipv4-route> | <IPV6> <ipv6-route> |
             <MPLS> <MPLS_LABEL> | <IEEE_MAC> <MAC_ADDRESS> |
             <INTERFACE> <INTERFACE_IDENTIFIER>
@@ -728,7 +733,8 @@ special-nexthop              | 1..N
 
 
 <nexthop> ::= <nexthop-base> | <nexthop-lb> |
-              <nexthop-protection> | <nexthop-replicate>
+              <nexthop-protection> | <nexthop-replicate> |
+              <NEXTHOP_ID>
 
 
 <nexthop-lb> ::= <NEXTHOP_LB_WEIGHT> <nexthop-lb-member>
@@ -739,43 +745,29 @@ special-nexthop              | 1..N
 
 <nexthop-protection> = <NEXTHOP_PREFERENCE> <nexthop>
                       (<NEXTHOP_PREFERENCE> <nexthop>)...
-Each <NEXTHOP_PREFERENCE> should have a unique value within a
-<nexthop-protection>.
-
 
 <nexthop-replicate> ::= <nexthop> <nexthop> ...
 
-
 <nexthop-base> ::= <nexthop-special> | <nexthop-chain>
 
-
 <nexthop-chain> ::= <nexthop-chain-member> ...
-<nexthop-chain-identifier> ::= <NEXTHOP_CHAIN_NAME> |
-                               <NEXTHOP_CHAIN_ID>
-<nexthop-chain-member> ::= <nexthop-chain-member-identifier> |
+<nexthop-chain-member> ::= <NEXTHOP_CHAIN_MEMBER_ID> |
                <EGRESS_INTERFACE> |
                <ipv4-address> | <ipv6-address> |
                (<EGRESS_INTERFACE> (<ipv4-address> | <ipv6-address>)) |
                (<EGRESS_INTERFACE> <IEEE_MAC_ADDRESS>) |
-               (<tunnel-encap> [<EGRESS_INTERFACE>]) |
+               <tunnel-encap> | <tunnel-decap> |
                <logical-tunnel> |
                <RIB_NAME>)
 
-
 <EGRESS_INTERFACE> ::= <INTERFACE_IDENTIFIER>
 
-
-<nexthop-chain-member-identifier> ::= <NEXTHOP_CHAIN_MEMBER_NAME> |
-                                      <NEXTHOP_CHAIN_MEMBER_ID>
 <nexthop-special> ::= <DISCARD> | <DISCARD_WITH_ERROR> | 
                       (<RECEIVE> [<COS_VALUE>])
 
 
-
-
 <logical-tunnel> ::= <tunnel-type> <TUNNEL_NAME>
 <tunnel-type> ::= <IPV4> | <IPV6> | <MPLS> | <GRE> | <VxLAN> | <NVGRE>
-
 
 <tunnel-encap> ::= (<IPV4> <ipv4-header>) | 
                    (<IPV6> <ipv6-header>) |
@@ -791,16 +783,11 @@ Each <NEXTHOP_PREFERENCE> should have a unique value within a
                   <NEXT_HEADER> [<TRAFFIC_CLASS>] 
                   [<FLOW_LABEL>] [<HOP_LIMIT>]
 
-
-
-
 <mpls-header> ::= (<mpls-label-operation> ...)
 <mpls-label-operation> ::= (<MPLS_PUSH> <MPLS_LABEL> [<S_BIT>] 
-                           [<TOS_VALUE>] [<TTL_VALUE>]) | 
-                           (<MPLS_POP> [<TTL_ACTION>])
-
-
-
+                                        [<TOS_VALUE>] [<TTL_VALUE>]) | 
+                           (<MPLS_SWAP> <IN_LABEL> <OUT_LABEL>
+                                       [<TTL_ACTION>])
 
 <gre-header> ::= <GRE_IP_DESTINATION> <GRE_PROTOCOL_TYPE> [<GRE_KEY>]
 <vxlan-header> ::= (<ipv4-header> | <ipv6-header>) 
@@ -809,11 +796,9 @@ Each <NEXTHOP_PREFERENCE> should have a unique value within a
                    <VIRTUAL_SUBNET_ID> 
                    [<FLOW_ID>]
 
-
-
-
-
-
+<tunnel-decap> ::= ((<IPV4> <IPV4_DECAP> [<TTL_ACTION>]) |
+                    (<IPV6> <IPV6_DECAP> [<HOP_LIMIT_ACTION>]) |
+                    (<MPLS> <MPLS_POP> [<TTL_ACTION>]))
 
 
 ]]></artwork>
@@ -860,7 +845,10 @@ Each <NEXTHOP_PREFERENCE> should have a unique value within a
           <t>A tunnel nexthop points to a tunnel of some kind. Traffic that
           goes over the tunnel gets encapsulated with the tunnel encap. Tunnel
           nexthops are useful for abstracting out details of the network, by
-          having the traffic seamlessly route between network edges.</t>
+          having the traffic seamlessly route between network edges. At the
+          end of a tunnel, the tunnel will get decapsulated. Thus the grammar
+          supports two kinds of operations, one for encap and another for
+          decap.</t>
         </section>
 
         <section anchor="replication-list" title="Replication lists">
@@ -970,7 +958,7 @@ The above can be derived from the grammar as follows:
           <figure>
             <artwork><![CDATA[
 <nexthop> ::= <NEXTHOP_PROTECTION> (<1> <nexthop> 
-              <2> <nexthop> <3> <nexthop>)
+              <2> <NEXTHOP_PROTECTION>(<1> <nexthop> <2> <nexthop>))
 
 
 ]]></artwork>
