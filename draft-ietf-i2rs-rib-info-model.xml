@@ -63,7 +63,7 @@
 
     <!---->
 
-    <date day="14" month="October" year="2015" />
+    <date day="19" month="October" year="2015" />
 
     <area>Routing</area>
 
@@ -412,32 +412,37 @@
                                 | 
                                 | 0..N
                                 |
-                              nexthop <-----------------+
-                                |                       |
-         +-------+----------------------------+         |
-         |       |              |             |         |
-         |       |              |             |         |
-      base   load-balance   protection      replicate   |
-         |       |              |             |         |
-         |       |2..N          |2            |2..N     |
-         |       |              V             |         |
-         |       +------------->+<------------+         |
-         |                      |                       |
-         |                      +-----------------------+
+                              nexthop <-------------------------------+
+                                |                                     |
+         +-------+----------------------------+-------------+         |
+         |       |              |             |             |         |
+         |       |              |             |             |         |
+      base   load-balance   protection      replicate     chain       |
+         |       |              |             |             |         |
+         |       |2..N          |2..N         |2..N         |1..N     |
+         |       |              |             |             |         |
+         |       |              V             |             |         |
+         |       +------------->+<------------+-------------+         |
+         |                      |                                     |
+         |                      +-------------------------------------+
          |
          +-------------------+
-         |                   |
-         |             nexthop-chain
-         |                   |
- special-nexthop             | 1..N
                              |
-                    nexthop-chain-member
+                             | 
                              |
                              |
-    +---------------+--------+--------+--------------+-----------+
-    |               |                 |              |           |
-    |               |                 |              |           |
- nexthop-id  egress-interface  logical-tunnel  tunnel-encap tunnel-decap
+    +---------------+--------+--------+--------------+
+    |               |                 |              |
+    |               |                 |              |
+ nexthop-id  egress-interface  logical-tunnel        |
+                                                     |
+                                                     |
+                         +---------------------------+
+                         |
+      +--------------+-----------+
+      |              |           |
+      |              |           |
+tunnel-encap  tunnel-decap  special-nexthop
     ]]></artwork>
         </figure>
 
@@ -471,8 +476,8 @@
               <t>Preference lists - for protection using primary and
               backup</t>
 
-              <t>Nexthop chains - for chaining headers, e.g. MPLS label over a
-              GRE header</t>
+              <t>Nexthop chains - for chaining multiple operations or
+              attaching multiple headers</t>
 
               <t>Lists of lists - recursive application of the above</t>
 
@@ -498,16 +503,19 @@
           It is expected that the data-model will model these tunnel types
           with complete accuracy.</t>
 
-          <t>Nexthop chains can be used to specify multiple headers over a
-          packet, before a packet is forwarded. One simple example is that of
-          MPLS over GRE, wherein the packet has an inner MPLS header followed
-          by a GRE header followed by an IP header. The outermost IP header is
-          decided by the network device whereas the MPLS header and GRE header
-          are specified by the controller. Not every network device will be
-          able to support all kinds of nexthop chains and an arbitrary number
-          of header chained together. The RIB data-model SHOULD provide a way
-          to expose nexthop chaining capability supported by a given network
-          device.</t>
+          <t>Nexthop chains <xref target="nexthop-chains"></xref>, is a way to
+          perform multiple operations on a packet by logically combining them.
+          For example, one can chain together "decapsulate MPLS header" and
+          "send it out a specific EGRESS_INTERFACE". Chains can be used to
+          specify multiple headers over a packet, before a packet is
+          forwarded. One simple example is that of MPLS over GRE, wherein the
+          packet has an inner MPLS header followed by a GRE header followed by
+          an IP header. The outermost IP header is decided by the network
+          device whereas the MPLS header and GRE header are specified by the
+          controller. Not every network device will be able to support all
+          kinds of nexthop chains and an arbitrary number of header chained
+          together. The RIB data-model SHOULD provide a way to expose nexthop
+          chaining capability supported by a given network device.</t>
         </section>
 
         <section title="Nexthop list attributes">
@@ -519,7 +527,7 @@
               is an integer value between 1 and 99. A lower value indicates
               higher preference. To download a primary/standby pair to the
               FIB, the nexthops that are resolved and have two highest
-              preferences are selected. Each &lt;NEXTHOP_PREFERENCE&gt;should
+              preferences are selected. Each &lt;NEXTHOP_PREFERENCE&gt; should
               have a unique value within a &lt;nexthop-protection&gt; <list
                   style="symbols">
                   <t></t>
@@ -541,7 +549,8 @@
           <t>At the lowest level, a nexthop can be one of:<list
               style="symbols">
               <t>identifier: This is an identifier returned by the network
-              device representing another nexthop.</t>
+              device representing a nexthop. This can be used as a way of
+              re-using a nexthop when programming complex nexthops.</t>
 
               <t>EGRESS_INTERFACE: This represents a physical, logical or
               virtual interface on the network device. Address resolution must
@@ -574,7 +583,9 @@
               IP packet.</t>
 
               <t>tunnel decap: This is to specify decapsulating a tunnel
-              header</t>
+              header. After decap, further lookup on the packet can be done
+              via chaining it with another nexthop. The packet can also be
+              sent out via a EGRESS_INTERFACE directly.</t>
 
               <t>logical tunnel: This can be a MPLS LSP or a GRE tunnel (or
               others as defined in this document), that is represented by a
@@ -734,13 +745,27 @@
 
 <nexthop> ::= <nexthop-base> | <nexthop-lb> |
               <nexthop-protection> | <nexthop-replicate> |
-              <NEXTHOP_ID>
+              <nexthop-chain>
+
+<nexthop-base> ::= <NEXTHOP_ID> |
+                   <nexthop-special> |
+                   <EGRESS_INTERFACE> |
+                   <ipv4-address> | <ipv6-address> |
+                   (<EGRESS_INTERFACE> 
+                       (<ipv4-address> | <ipv6-address>)) |
+                   (<EGRESS_INTERFACE> <IEEE_MAC_ADDRESS>) |
+                   <tunnel-encap> | <tunnel-decap> |
+                   <logical-tunnel> |
+                   <RIB_NAME>)
+                   
+<EGRESS_INTERFACE> ::= <INTERFACE_IDENTIFIER>
+
+<nexthop-special> ::= <DISCARD> | <DISCARD_WITH_ERROR> | 
+                      (<RECEIVE> [<COS_VALUE>])
 
 
-<nexthop-lb> ::= <NEXTHOP_LB_WEIGHT> <nexthop-lb-member>
-                 (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>) ...
-<NEXTHOP_LB_WEIGHT> is a number between 1 and 99.
-<nexthop-lb-member> ::= <nexthop>
+<nexthop-lb> ::= <NEXTHOP_LB_WEIGHT> <nexthop>
+                 (<NEXTHOP_LB_WEIGHT> <nexthop) ...
 
 
 <nexthop-protection> = <NEXTHOP_PREFERENCE> <nexthop>
@@ -748,22 +773,8 @@
 
 <nexthop-replicate> ::= <nexthop> <nexthop> ...
 
-<nexthop-base> ::= <nexthop-special> | <nexthop-chain>
 
-<nexthop-chain> ::= <nexthop-chain-member> ...
-<nexthop-chain-member> ::= <NEXTHOP_CHAIN_MEMBER_ID> |
-               <EGRESS_INTERFACE> |
-               <ipv4-address> | <ipv6-address> |
-               (<EGRESS_INTERFACE> (<ipv4-address> | <ipv6-address>)) |
-               (<EGRESS_INTERFACE> <IEEE_MAC_ADDRESS>) |
-               <tunnel-encap> | <tunnel-decap> |
-               <logical-tunnel> |
-               <RIB_NAME>)
-
-<EGRESS_INTERFACE> ::= <INTERFACE_IDENTIFIER>
-
-<nexthop-special> ::= <DISCARD> | <DISCARD_WITH_ERROR> | 
-                      (<RECEIVE> [<COS_VALUE>])
+<nexthop-chain> ::= <nexthop> ...
 
 
 <logical-tunnel> ::= <tunnel-type> <TUNNEL_NAME>
@@ -901,8 +912,8 @@ The above can be derived from the grammar as follows:
 
 <nexthop> ::= <nexthop-lb>
 <nexthop> ::= <NEXTHOP_LOAD_BALANCE>
-                <NEXTHOP_LB_WEIGHT> <nexthop-lb-member> 
-                (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>) ...
+                <NEXTHOP_LB_WEIGHT> <nexthop> 
+                (<NEXTHOP_LB_WEIGHT> <nexthop>) ...
 <nexthop> ::= <NEXTHOP_LOAD_BALANCE> (<NEXTHOP_LB_WEIGHT> <nexthop>)
                 (<NEXTHOP_LB_WEIGHT> <nexthop>) ...
 
@@ -965,33 +976,54 @@ The above can be derived from the grammar as follows:
           </figure>
         </section>
 
-        <section title="Nexthop chains">
-          <t>A nexthop chain specifies how to put one or more headers on an
-          outgoing packet. One example is a Pseudowire - which is MPLS over
-          some transport (MPLS or GRE for instance). Another example is VxLAN
-          over IP. A nexthop chain allows an external entity to break up the
-          programming of the nexthop into independent pieces - one per
-          encapsulation.</t>
+        <section anchor="nexthop-chains" title="Nexthop chains">
+          <t>A nexthop chain is a way to perform multiple operations on a
+          packet by logically combining them. For example, when a VPN packet
+          comes on the WAN interface and has to be forwarded to the correct
+          VPN interface, one needs to POP the VPN label before sending the
+          packet out. Using a nexthop chain, one can chain together "pop MPLS
+          header" and "send it out a specific EGRESS_INTERFACE". </t>
+
+          <figure>
+            <artwork><![CDATA[
+The above example can be derived from the grammar as follows:
+
+
+<nexthop-chain> ::= <nexthop> <nexthop>
+<nexthop-chain> ::= <nexthop-base> <nexthop-base>
+<nexthop-chain> ::= <tunnel-decap> <EGRESS_INTERFACE>
+<nexthop-chain> ::= (<MPLS> <MPLS_POP>) <interface-outgoing>
+
+]]></artwork>
+          </figure>
 
           <t>Elements in a nexthop-chain are evaluated left to right.</t>
+
+          <t>A nexthop chain can also be used to put one or more headers on an
+          outgoing packet. One example is a Pseudowire - which is MPLS over
+          some transport (MPLS or GRE for instance). Another example is VxLAN
+          over IP. A nexthop chain thus allows an external entity to break up
+          the programming of the nexthop into independent pieces - one per
+          encapsulation.</t>
 
           <t>A simple example of MPLS over GRE can be represented as:</t>
 
           <figure>
             <artwork><![CDATA[
-<nexthop-chain> ::= (<MPLS> <mpls-header>) (<GRE> <gre-header>
-                    <interface-outgoing>)
+<nexthop-chain> ::= (<MPLS> <mpls-header>) (<GRE> <gre-header>)
+                    <interface-outgoing>
 
 
 The above can be derived from the grammar as follows:
 
 
-<nexthop-chain> ::= <nexthop-chain-member> [<nexthop-chain-member> ...]
-<nexthop-chain> ::= <tunnel-encap> (<tunnel-encap>
-                    <nexthop-chain-member>)
-<nexthop-chain> ::= <tunnel-encap> (<tunnel-encap> <EGRESS_INTERFACE>)
-<nexthop-chain> ::= (<MPLS> <mpls-header>) (<GRE> <gre-header>
-                    <interface-outgoing>)]]></artwork>
+<nexthop-chain> ::= <nexthop> <nexthop> <nexthop>
+<nexthop-chain> ::= <nexthop-base> <nexthop-base> <nexthop-base>
+<nexthop-chain> ::= <tunnel-encap> <tunnel-encap> <EGRESS_INTERFACE>
+<nexthop-chain> ::= (<MPLS> <mpls-header>) (<GRE> <gre-header>)
+                    <interface-outgoing>
+
+]]></artwork>
           </figure>
         </section>
 
@@ -1021,29 +1053,23 @@ This can be derived from the grammar as follows:
 <nexthop> ::= <NEXTHOP_REPLICATE> ((<NEXTHOP_LOAD_BALANCE> <nexthop-lb>)
               (<NEXTHOP_LOAD_BALANCE> <nexthop-lb>))
 <nexthop> ::= <NEXTHOP_REPLICATE> ((<NEXTHOP_LOAD_BALANCE>
-              (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member> 
-              (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>) ...))
+              (<NEXTHOP_LB_WEIGHT> <nexthop> 
+              (<NEXTHOP_LB_WEIGHT> <nexthop>) ...))
                ((<NEXTHOP_LOAD_BALANCE>
-                (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>
-                (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>) ...))
+                (<NEXTHOP_LB_WEIGHT> <nexthop>
+                (<NEXTHOP_LB_WEIGHT> <nexthop>) ...))
 <nexthop> ::= <NEXTHOP_REPLICATE> ((<NEXTHOP_LOAD_BALANCE>
-              (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member> 
-               (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)))
+              (<NEXTHOP_LB_WEIGHT> <nexthop> 
+               (<NEXTHOP_LB_WEIGHT> <nexthop>)))
                 ((<NEXTHOP_LOAD_BALANCE>
-                (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>
-                (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)
-                (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)))
-<nexthop> ::= <NEXTHOP_REPLICATE> ((<NEXTHOP_LOAD_BALANCE>
-               (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>) 
-               (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)))
-               ((<NEXTHOP_LOAD_BALANCE>
-               (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)
-               (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)
-               (<NEXTHOP_LB_WEIGHT> <nexthop-lb-member>)))
+                (<NEXTHOP_LB_WEIGHT> <nexthop>
+                (<NEXTHOP_LB_WEIGHT> <nexthop>)
+                (<NEXTHOP_LB_WEIGHT> <nexthop>)))
 <nexthop> ::= <NEXTHOP_REPLICATE> ((<NEXTHOP_LOAD_BALANCE>
                (<NEXTHOP_LB_WEIGHT> <nexthop>) 
                (<NEXTHOP_LB_WEIGHT> <nexthop>)))
-               ((<NEXTHOP_LOAD_BALANCE> (<NEXTHOP_LB_WEIGHT> <nexthop>)
+               ((<NEXTHOP_LOAD_BALANCE>
+               (<NEXTHOP_LB_WEIGHT> <nexthop>)
                (<NEXTHOP_LB_WEIGHT> <nexthop>)
                (<NEXTHOP_LB_WEIGHT> <nexthop>)))
 <nexthop> ::= <NEXTHOP_REPLICATE>
@@ -1131,11 +1157,12 @@ This can be derived from the grammar as follows:
     </section>
 
     <section title="Acknowledgements">
-      <t>The authors would like to thank Ron Folkes, the working group
-      co-chairs and reviewers on their comments and suggestions on this draft.
-      The following people contributed to the design of the RIB model as part
-      of the I2RS Interim meeting in April 2013 - Wes George, Chris
-      Liljenstolpe, Jeff Tantsura, Susan Hares and Fabian Schneider.</t>
+      <t>The authors would like to thank Ron Folkes, Jeffrey Zhang,
+      the working group co-chairs and reviewers on their comments and
+      suggestions on this draft. The following people contributed to
+      the design of the RIB model as part of the I2RS Interim meeting
+      in April 2013 - Wes George, Chris Liljenstolpe, Jeff Tantsura,
+      Susan Hares and Fabian Schneider.</t>
     </section>
   </middle>
 
