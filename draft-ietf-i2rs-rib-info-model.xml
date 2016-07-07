@@ -8,8 +8,8 @@
 <!ENTITY RFC5120 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5120.xml">
 <!ENTITY RFC5511 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.5511.xml">
 <!ENTITY RFC6020 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.6020.xml">
+<!ENTITY RFC7920 SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7920.xml">
 <!ENTITY I2RS-USE-CASES SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml3/reference.I-D.white-i2rs-use-case.xml">
-<!ENTITY I2RS-PROBLEM-STATEMENT SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-i2rs-problem-statement.xml">
 <!ENTITY I2RS-VN-VC SYSTEM "http://xml2rfc.ietf.org/public/rfc/bibxml3/reference.I-D.hares-i2rs-use-case-vn-vc.xml">
 ]>
 <?rfc toc="yes"?>
@@ -18,7 +18,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-08"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-09"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -46,10 +46,8 @@
 
     <author fullname="Sriganesh Kini" initials="S.K." role="editor"
             surname="Kini">
-      <organization>Ericsson</organization>
-
       <address>
-        <email>sriganesh.kini@ericsson.com</email>
+        <email>sriganeshkini@gmail.com</email>
       </address>
     </author>
 
@@ -63,7 +61,7 @@
 
     <!---->
 
-    <date day="19" month="October" year="2015" />
+    <date day="7" month="July" year="2016" />
 
     <area>Routing</area>
 
@@ -80,7 +78,7 @@
       typically performed by network devices (routers and switches) using a
       routing information base (RIB). Protocols and configuration push data
       into the RIB and the RIB manager installs state into the hardware; for
-      packet forwarding. This draft specifies an information model for the RIB
+      packet forwarding. This draft specifies a information model for the RIB
       to enable defining a standardized data model. Such a data model can be
       used to define an interface to the RIB from an entity that may even be
       external to the network device. This interface can be used to support
@@ -138,7 +136,7 @@
       from its peers. With the advent of newer deployment paradigms and the
       need for specialized applications, there is an emerging need to guide
       the router's routing function <xref
-      target="I-D.ietf-i2rs-problem-statement"></xref>. Traditional
+      target="RFC7920"></xref>. Traditional
       network-device protocol-based RIB population suffices for most use cases
       where distributed network control is used. However there are use cases
       which the network operators currently address by configuring static
@@ -155,7 +153,7 @@
       run traditional routing protocols). If there was a standardized publicly
       documented programmatic interface to a RIB, it would enable further
       networking applications that address a variety of use-cases <xref
-      target="I-D.ietf-i2rs-problem-statement"></xref>.</t>
+      target="RFC7920"></xref>.</t>
 
       <t>A programmatic interface to the RIB involves 2 types of operations -
       reading from the RIB and writing (adding/modifying/deleting) to the RIB.
@@ -231,11 +229,11 @@
         <t>A RIB is an entity that contains routes. A RIB is identified by its
         name and a RIB is contained within a routing instance (<xref
         target="routing-instance"></xref>). The name MUST be unique within a
-        routing instance. All routes in a given RIB MUST be of the same type
-        (e.g. IPv4). Each RIB MUST belong to a routing instance.</t>
+        routing instance. All routes in a given RIB MUST be of the same rib
+        family (e.g. IPv4). Each RIB MUST belong to a routing instance.</t>
 
         <t>A routing instance can have multiple RIBs. A routing instance can
-        even have two or more RIBs with the same type of routes (e.g. IPv6). A
+        even have two or more RIBs of the same rib family (e.g. IPv6). A
         typical case where this can be used is for multi-topology routing
         (<xref target="RFC4915"></xref>, <xref target="RFC5120"></xref>).</t>
 
@@ -253,7 +251,7 @@
       <section anchor="routing-instance" title="Routing instance">
         <t>A routing instance, in the context of the RIB information model, is
         a collection of RIBs, interfaces, and routing parameters. A routing
-        instance creates a logical slice of the router and allows different
+        instance creates a logical slice of the router. It allows different
         logical slices; across a set of routers; to communicate with each
         other. Layer 3 Virtual Private Networks (VPN), Layer 2 VPNs (L2VPN)
         and Virtual Private Lan Service (VPLS) can be modeled as routing
@@ -296,7 +294,14 @@
             multiple virtual routers. Each virtual router MUST have a unique
             router-id. ROUTER_ID MUST be unique across all network devices in
             a given domain.</t>
-          </list></t>
+          </list>A routing instance may be created purely for the purposes of
+        packet processing and may not have any interfaces associated with it.
+        For example, an incoming packet in routing instance A might have a
+        nexthop of routing instance B and after packet processing in B, the
+        nexthop might be routing instance C. Thus, routing instance B is not
+        associated with any interface. And given that this routing instance
+        does not do any control plane interaction with other network devices,
+        a ROUTER_ID is also not needed.</t>
       </section>
 
       <section title="Route">
@@ -354,11 +359,12 @@
             also considered a protocol for the purpose of this field. It is
             also known as administrative-distance. The lower the value, the
             higher the preference. For example there can be an OSPF route for
-            192.0.2.1/32 with a preference of 5. If a controller programs a
-            route for 192.0.2.1/32 with a preference of 2, then the
-            controller's route will be preferred by the RIB manager.
-            Preference should be used to dictate behavior. For more examples
-            of preference, see <xref target="route-preference"></xref>.</t>
+            192.0.2.1/32 (or IPv6 2001:DB8::1/32) with a preference of 5. If a
+            controller programs a route for 192.0.2.1/32 (or IPv6
+            2001:DB8::1/32) with a preference of 2, then the controller's
+            route will be preferred by the RIB manager. Preference should be
+            used to dictate behavior. For more examples of preference, see
+            <xref target="route-preference"></xref>.</t>
           </list></t>
 
         <t>Each route can have associated with it one or more optional route
@@ -743,8 +749,10 @@ tunnel-encap  tunnel-decap  special-nexthop
 <route-vendor-attributes> ::= <>
 
 
-<nexthop> ::= <nexthop-base> | <nexthop-lb> |
-              <nexthop-protection> | <nexthop-replicate> |
+<nexthop> ::= <nexthop-base> |
+              (<NEXTHOP_LOAD_BALANCE> <nexthop-lb>) |
+              (<NEXTHOP_PROTECTION> <nexthop-protection>) |
+              (<NEXTHOP_REPLICATE> <nexthop-replicate>) |
               <nexthop-chain>
 
 <nexthop-base> ::= <NEXTHOP_ID> |
@@ -982,7 +990,7 @@ The above can be derived from the grammar as follows:
           comes on the WAN interface and has to be forwarded to the correct
           VPN interface, one needs to POP the VPN label before sending the
           packet out. Using a nexthop chain, one can chain together "pop MPLS
-          header" and "send it out a specific EGRESS_INTERFACE". </t>
+          header" and "send it out a specific EGRESS_INTERFACE".</t>
 
           <figure>
             <artwork><![CDATA[
@@ -1157,12 +1165,11 @@ This can be derived from the grammar as follows:
     </section>
 
     <section title="Acknowledgements">
-      <t>The authors would like to thank Ron Folkes, Jeffrey Zhang,
-      the working group co-chairs and reviewers on their comments and
-      suggestions on this draft. The following people contributed to
-      the design of the RIB model as part of the I2RS Interim meeting
-      in April 2013 - Wes George, Chris Liljenstolpe, Jeff Tantsura,
-      Susan Hares and Fabian Schneider.</t>
+      <t>The authors would like to thank Ron Folkes, Jeffrey Zhang, the
+      working group co-chairs and reviewers on their comments and suggestions
+      on this draft. The following people contributed to the design of the RIB
+      model as part of the I2RS Interim meeting in April 2013 - Wes George,
+      Chris Liljenstolpe, Jeff Tantsura, Susan Hares and Fabian Schneider.</t>
     </section>
   </middle>
 
@@ -1178,9 +1185,9 @@ This can be derived from the grammar as follows:
 
       &RFC5511;
 
-      &I2RS-USE-CASES;
+      &RFC7920;
 
-      &I2RS-PROBLEM-STATEMENT;
+      &I2RS-USE-CASES;
 
       &I2RS-VN-VC;
     </references>
