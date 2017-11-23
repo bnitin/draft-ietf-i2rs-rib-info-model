@@ -18,7 +18,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-11"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-12"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -61,7 +61,7 @@
 
     <!---->
 
-    <date day="16" month="June" year="2017" />
+    <date day="22" month="November" year="2017" />
 
     <area>Routing</area>
 
@@ -135,13 +135,12 @@
       router makes an independent decision based on the routing data received
       from its peers. With the advent of newer deployment paradigms and the
       need for specialized applications, there is an emerging need to guide
-      the router's routing function <xref
-      target="RFC7920"></xref>. Traditional
-      network-device protocol-based RIB population suffices for most use cases
-      where distributed network control is used. However there are use cases
-      which the network operators currently address by configuring static
-      routes, policies and RIB import/export rules on the routers. There is
-      also a growing list of use cases <xref
+      the router's routing function <xref target="RFC7920"></xref>.
+      Traditional network-device protocol-based RIB population suffices for
+      most use cases where distributed network control is used. However there
+      are use cases which the network operators currently address by
+      configuring static routes, policies and RIB import/export rules on the
+      routers. There is also a growing list of use cases <xref
       target="I-D.white-i2rs-use-case"></xref>, <xref
       target="I-D.hares-i2rs-use-case-vn-vc"></xref> in which a network
       operator might want to program the RIB based on data unrelated to just
@@ -336,9 +335,11 @@
 
         <t>This document specifies the following match types:<list
             style="symbols">
-            <t>IPv4: Match on destination IP address in the IPv4 header</t>
+            <t>IPv4: Match on destination and/or source IP address in the IPv4
+            header</t>
 
-            <t>IPv6: Match on destination IP address in the IPv6 header</t>
+            <t>IPv6: Match on destination and/or source IP address in the IPv6
+            header</t>
 
             <t>MPLS: Match on a MPLS label at the top of the MPLS label
             stack</t>
