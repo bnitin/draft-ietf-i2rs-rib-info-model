@@ -18,24 +18,24 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-12"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-13"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
 
     <author fullname="Nitin Bahadur" initials="N.B." role="editor"
             surname="Bahadur">
-      <organization>Bracket Computing</organization>
+      <organization>Uber</organization>
 
       <address>
         <postal>
-          <street>150 West Evelyn Ave, Suite 200</street>
+          <street>900 Arastradero Rd</street>
 
-          <city>Mountain View</city>
+          <city>Palo Alto</city>
 
           <region>CA</region>
 
-          <code>94041</code>
+          <code>94304</code>
 
           <country>US</country>
         </postal>
@@ -61,7 +61,7 @@
 
     <!---->
 
-    <date day="22" month="November" year="2017" />
+    <date day="19" month="January" year="2018" />
 
     <area>Routing</area>
 
