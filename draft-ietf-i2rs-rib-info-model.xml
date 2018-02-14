@@ -6,11 +6,14 @@
 <!ENTITY RFC4915 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4915.xml">
 <!ENTITY RFC5065 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5065.xml">
 <!ENTITY RFC5120 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5120.xml">
+<!ENTITY RFC5246 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5246.xml">
 <!ENTITY RFC5511 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5511.xml">
 <!ENTITY RFC6020 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6020.xml">
+<!ENTITY RFC6241 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6241.xml">
+<!ENTITY RFC6242 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6242.xml">
+<!ENTITY RFC6536 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6536.xml">
 <!ENTITY RFC7920 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7920.xml">
-<!ENTITY I2RS-USE-CASES SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.white-i2rs-use-case.xml">
-<!ENTITY I2RS-VN-VC SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.hares-i2rs-use-case-vn-vc.xml">
+<!ENTITY RFC8040 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8040.xml">
 ]>
 <?rfc toc="yes"?>
 <?rfc sortrefs="yes"?>
@@ -18,7 +21,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-13"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-14"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -61,7 +64,7 @@
 
     <!---->
 
-    <date day="19" month="January" year="2018" />
+    <date day="13" month="February" year="2018"/>
 
     <area>Routing</area>
 
@@ -78,11 +81,12 @@
       typically performed by network devices (routers and switches) using a
       routing information base (RIB). Protocols and configuration push data
       into the RIB and the RIB manager installs state into the hardware; for
-      packet forwarding. This draft specifies a information model for the RIB
-      to enable defining a standardized data model. Such a data model can be
-      used to define an interface to the RIB from an entity that may even be
-      external to the network device. This interface can be used to support
-      new use-cases being defined by the IETF I2RS WG.</t>
+      packet forwarding. This draft specifies an information model for the RIB
+      to enable defining a standardized data model, and it was used by the
+      IETF&rsquo;&rsquo;s I2RS WG to design the I2RS RIB data model. It is
+      being published to record the higher level informational model decisions
+      for RIBs so that other developers of RIBs may benefit from the design
+      concepts.</t>
     </abstract>
   </front>
 
@@ -97,7 +101,7 @@
       into the RIB. The RIB manager consults the RIB and decides how to
       program the forwarding information base (FIB) of the hardware by
       interfacing with the FIB manager. The relationship between these
-      entities is shown in <xref target="rib-fib-interaction"></xref>.</t>
+      entities is shown in <xref target="rib-fib-interaction"/>.</t>
 
       <figure align="center" anchor="rib-fib-interaction"
               title="RIB manager, RIB clients and FIB managers">
@@ -135,29 +139,26 @@
       router makes an independent decision based on the routing data received
       from its peers. With the advent of newer deployment paradigms and the
       need for specialized applications, there is an emerging need to guide
-      the router's routing function <xref target="RFC7920"></xref>.
-      Traditional network-device protocol-based RIB population suffices for
-      most use cases where distributed network control is used. However there
-      are use cases which the network operators currently address by
-      configuring static routes, policies and RIB import/export rules on the
-      routers. There is also a growing list of use cases <xref
-      target="I-D.white-i2rs-use-case"></xref>, <xref
-      target="I-D.hares-i2rs-use-case-vn-vc"></xref> in which a network
-      operator might want to program the RIB based on data unrelated to just
-      routing (within that network's domain). Programming the RIB could be
-      based on other information such as routing data in the adjacent domain
-      or the load on storage and compute in the given domain. Or it could
-      simply be a programmatic way of creating on-demand dynamic overlays
-      (e.g. GRE tunnels) between compute hosts (without requiring the hosts to
-      run traditional routing protocols). If there was a standardized publicly
+      the router's routing function <xref target="RFC7920"/>. Traditional
+      network-device protocol-based RIB population suffices for most use cases
+      where distributed network control is used. However there are use cases
+      which the network operators currently address by configuring static
+      routes, policies and RIB import/export rules on the routers. There is
+      also a growing list of use cases in which a network operator might want
+      to program the RIB based on data unrelated to just routing (within that
+      network's domain). Programming the RIB could be based on other
+      information such as routing data in the adjacent domain or the load on
+      storage and compute in the given domain. Or it could simply be a
+      programmatic way of creating on-demand dynamic overlays (e.g. GRE
+      tunnels) between compute hosts (without requiring the hosts to run
+      traditional routing protocols). If there was a standardized publicly
       documented programmatic interface to a RIB, it would enable further
       networking applications that address a variety of use-cases <xref
-      target="RFC7920"></xref>.</t>
+      target="RFC7920"/>.</t>
 
       <t>A programmatic interface to the RIB involves 2 types of operations -
-      reading from the RIB and writing (adding/modifying/deleting) to the RIB.
-      <xref target="I-D.white-i2rs-use-case"></xref> lists various use-cases
-      which require read and/or write manipulation of the RIB.</t>
+      reading from the RIB and writing (adding/modifying/deleting) to the
+      RIB.</t>
 
       <t>In order to understand what is in a router's RIB, methods like
       per-protocol SNMP MIBs and show output screen scraping are used. These
@@ -184,36 +185,44 @@
       <t>The rest of this document is organized as follows. <xref
       target="rib-data"> </xref> goes into the details of what constitutes and
       can be programmed in a RIB. Guidelines for reading and writing the RIB
-      are provided in <xref target="rib-read"></xref> and <xref
-      target="rib-write"></xref> respectively. <xref target="events"></xref>
-      provides a high-level view of the events and notifications going from a
-      network device to an external entity, to update the external entity on
-      asynchronous events. The RIB grammar is specified in <xref
-      target="rib-grammar"></xref>. Examples of using the RIB grammar are
-      shown in <xref target="rib-examples"></xref>. <xref
-      target="rib-scale"></xref> covers considerations for performing RIB
-      operations at scale.</t>
+      are provided in <xref target="rib-read"/> and <xref target="rib-write"/>
+      respectively. <xref target="events"/> provides a high-level view of the
+      events and notifications going from a network device to an external
+      entity, to update the external entity on asynchronous events. The RIB
+      grammar is specified in <xref target="rib-grammar"/>. Examples of using
+      the RIB grammar are shown in <xref target="rib-examples"/>. <xref
+      target="rib-scale"/> covers considerations for performing RIB operations
+      at scale.</t>
 
       <section title="Conventions used in this document">
         <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
         "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
         document are to be interpreted as described in <xref
-        target="RFC2119"></xref>.</t>
+        target="RFC2119"/>.</t>
       </section>
     </section>
 
     <section anchor="rib-data" title="RIB data" toc="default">
       <t>This section describes the details of a RIB. It makes forward
-      references to objects in the RIB grammar (<xref
-      target="rib-grammar"></xref>). A high-level description of the RIB
-      contents is as shown below.</t>
+      references to objects in the RIB grammar (<xref target="rib-grammar"/>).
+      A high-level description of the RIB contents is as shown in <xref
+      target="rib-model"/>. Please note that for ease of ASCII art
+      representation this drawing shows a single routing-instance, a single,
+      RIB, and a single route. Sub-sections of this Section describe the
+      logical data nodes that should be contained within a RIB. <xref
+      target="rib-read"/> and <xref target="rib-write"/> describe the high
+      level read and write operations.</t>
 
       <figure anchor="rib-model" title="RIB model">
         <artwork name="RIB model"><![CDATA[
-                      routing-instance
+                       network-device
+                             |
+                             | 0..N
+                             |
+                      routing-instance (s)
                        |             |
                        |             | 
-                 0..N  |             | 1..N
+                 0..N  |             | 0..N
                        |             |
                   interface(s)     RIB(s)
                                      |
@@ -227,14 +236,16 @@
       <section title="RIB definition">
         <t>A RIB is an entity that contains routes. A RIB is identified by its
         name and a RIB is contained within a routing instance (<xref
-        target="routing-instance"></xref>). The name MUST be unique within a
-        routing instance. All routes in a given RIB MUST be of the same rib
-        family (e.g. IPv4). Each RIB MUST belong to a routing instance.</t>
+        target="routing-instance"/>). There MAY be many routing instances and
+        each routing intance MAY contain 1 or more RIBs. The name MUST be
+        unique within a routing instance. All routes in a given RIB MUST be of
+        the same rib family (e.g. IPv4). Each RIB MUST belong to a routing
+        instance.</t>
 
         <t>A routing instance can have multiple RIBs. A routing instance can
         even have two or more RIBs of the same rib family (e.g. IPv6). A
         typical case where this can be used is for multi-topology routing
-        (<xref target="RFC4915"></xref>, <xref target="RFC5120"></xref>).</t>
+        (<xref target="RFC4915"/>, <xref target="RFC5120"/>).</t>
 
         <t>Each RIB can be optionally associated with a ENABLE_IP_RPF_CHECK
         attribute that enables Reverse path forwarding (RPF) checks on all IP
@@ -307,8 +318,10 @@
         <t>A route is essentially a match condition and an action following
         the match. The match condition specifies the kind of route (IPv4,
         MPLS, etc.) and the set of fields to match on. <xref
-        target="route-model"></xref> represents the overall contents of a
-        route.</t>
+        target="route-model"/> represents the overall contents of a route.
+        Please note that for ease of depiction in ASCII art only a single
+        instance of the route attribute, match flags, or nexthop is
+        depicted.</t>
 
         <figure anchor="route-model" title="Route model">
           <artwork name="Route model"><![CDATA[
@@ -348,10 +361,11 @@
             header</t>
 
             <t>Interface: Match on incoming interface of the packet</t>
-
-            <t>IP multicast: Match on (S, G) or (*, G), where S and G are IP
-            addresses</t>
           </list></t>
+
+        <t>A route MAY be matched on one or more these match types by policy
+        as either an &ldquo;AND&rdquo; (to restrict the number of routes) or
+        an &ldquo;OR&rdquo; (to combine two filters).</t>
 
         <t>Each route MUST have associated with it the following mandatory
         route attributes.<list style="symbols">
@@ -365,7 +379,7 @@
             2001:DB8::1/32) with a preference of 2, then the controller's
             route will be preferred by the RIB manager. Preference should be
             used to dictate behavior. For more examples of preference, see
-            <xref target="route-preference"></xref>.</t>
+            <xref target="route-preference"/>.</t>
           </list></t>
 
         <t>Each route can have associated with it one or more optional route
@@ -374,9 +388,17 @@
             attributes using this. The details of this attribute is outside
             the scope of this document.</t>
           </list></t>
+
+        <t>Each route has associated with it a Nexthop. Nexthop is described
+        in <xref target="nexthop"/>.</t>
+
+        <t>Additional features to match multicast packets were considered
+        (E.g. TTL of the packet to limit the range of a multicast group), but
+        these were not added to this information model. Future RIB information
+        models should investigate these multicast features.</t>
       </section>
 
-      <section title="Nexthop">
+      <section anchor="nexthop" title="Nexthop">
         <t>A nexthop represents an object resulting from a route lookup. For
         example, if a route lookup results in sending the packet out a given
         interface, then the nexthop represents that interface.</t>
@@ -408,13 +430,15 @@
         model allows an external entity to program routes whose nexthops may
         be unresolved initially. Whenever an unresolved nexthop gets resolved,
         the RIB manager will send a notification of the same (see <xref
-        target="events"></xref> ).</t>
+        target="events"/> ).</t>
 
         <t>The overall structure and usage of a nexthop is as shown in the
-        figure below.</t>
+        figure below. For ease of ascii art depiction, only a single instance
+        of any component of the nexthop is shown in <xref
+        target="nexthop-model"/>.</t>
 
         <figure anchor="nexthop-model" title="Nexthop model">
-          <artwork name="Nexthop model"><![CDATA[                            
+          <artwork name="Nexthop model"><![CDATA[                       
                               route
                                 | 
                                 | 0..N
@@ -438,68 +462,89 @@
                              | 
                              |
                              |
-    +---------------+--------+--------+--------------+
-    |               |                 |              |
-    |               |                 |              |
- nexthop-id  egress-interface  logical-tunnel        |
-                                                     |
-                                                     |
-                         +---------------------------+
+    +---------------+--------+--------+--------------+----------+
+    |               |                 |              |          |
+    |               |                 |              |          |
+ nexthop-id  egress-interface  ip-address     logical-tunnel    |
+                                                                |
+                                                                |
+                         +--------------------------------------+
                          |
-      +--------------+-----------+
-      |              |           |
-      |              |           |
-tunnel-encap  tunnel-decap  special-nexthop
+      +--------------+----------+-------------+
+      |              |          |             |
+      |              |          |             |
+tunnel-encap  tunnel-decap  rib-name   special-nexthop
     ]]></artwork>
         </figure>
 
-        <t>Nexthops can be identified by an identifier to create a level of
-        indirection. The identifier is set by the RIB manager and returned to
-        the external entity on request. The RIB data-model SHOULD support a
-        way to optionally receive a nexthop identifier for a given nexthop.
-        For example, one can create a nexthop that points to a BGP peer. The
-        returned nexthop identifier can then be used for programming routes to
-        point to the same nexthop. Given that the RIB manager has created an
-        indirection for that BGP peer using the nexthop identifier, if the
-        transport path to the BGP peer changes, that change in path will be
-        seamless to the external entity and all routes that point to that BGP
-        peer will automatically start going over the new transport path.
-        Nexthop indirection using identifiers could be applied to not just
-        unicast nexthops, but even to nexthops that contain chains and nested
-        nexthops (<xref target="nexthop-types"></xref>).</t>
+        <t>This document specifies a very generic, extensible and recursive
+        grammar for nexthops. A nexthop can be a base nexthop or a derived
+        nexthop. <xref target="base-nexthop"/> details base nexthops and <xref
+        target="derived-nexthop"/> explains various kinds of derived nexthops.
+        There are certain special nexthops and those are described in <xref
+        target="special-nexthops"/>. Lastly, <xref
+        target="nexthop-indirection"/> delves into nexthop indirection and
+        it's use. Examples of when and how to use tunnel nexthops and derived
+        nexthops are shown in <xref target="nexthop-examples"/>.</t>
 
-        <section anchor="nexthop-types" title="Nexthop types">
-          <t>This document specifies a very generic, extensible and recursive
-          grammar for nexthops. Nexthops can be <list style="symbols">
-              <t>Interface nexthops - pointing to an interface</t>
+        <section anchor="base-nexthop" title="Base nexthop">
+          <t>At the lowest level, a nexthop can be one of:<list
+              style="symbols">
+              <t>Identifier: This is an identifier returned by the network
+              device representing a nexthop. This can be used as a way of
+              re-using a nexthop when programming derived nexthops.</t>
 
-              <t>Tunnel nexthops - pointing to a tunnel</t>
+              <t>Interface nexthops - nexthops pointing to an interface.
+              Various attributes associated with these nexthops are: <list
+                  style="symbols">
+                  <t>EGRESS_INTERFACE: This represents a physical, logical or
+                  virtual interface on the network device. Address resolution
+                  must not be required on this interface. This interface may
+                  belong to any routing instance.</t>
 
-              <t>Replication lists - list of nexthops to which to replicate a
-              packet</t>
+                  <t>IP address: A route lookup on this IP address is done to
+                  determine the egress interface. Address resolution may be
+                  required depending on the interface. <list style="symbols">
+                      <t>An optional RIB name can also be specified to
+                      indicate the RIB in which the IP address is to be looked
+                      up. One can use the RIB name field to direct the packet
+                      from one domain into another domain. By default the RIB
+                      will be the same as the one that route belongs to.</t>
+                    </list></t>
+                </list> These attributes can be used in combination as
+              follows: <list style="symbols">
+                  <t>EGRESS_INTERFACE and IP address: This can be used in
+                  cases e.g. where the IP address is a link-local address.</t>
 
-              <t>Weighted lists - for load-balancing</t>
+                  <t>EGRESS_INTERFACE and MAC address: The egress interface
+                  must be an ethernet interface. Address resolution is not
+                  required for this nexthop.</t>
+                </list></t>
 
-              <t>Preference lists - for protection using primary and
-              backup</t>
+              <t>Tunnel nexthops - nexthops pointing to a tunnel. Various
+              types of tunnel nexthops are: <list style="symbols">
+                  <t>tunnel encap: This can be an encap representing an IP
+                  tunnel or MPLS tunnel or others as defined in this document.
+                  An optional egress interface can be chained to the tunnel
+                  encap to indicate which interface to send the packet out on.
+                  The egress interface is useful when the network device
+                  contains Ethernet interfaces and one needs to perform
+                  address resolution for the IP packet.</t>
 
-              <t>Nexthop chains - for chaining multiple operations or
-              attaching multiple headers</t>
+                  <t>tunnel decap: This is to specify decapsulating a tunnel
+                  header. After decap, further lookup on the packet can be
+                  done via chaining it with another nexthop. The packet can
+                  also be sent out via a EGRESS_INTERFACE directly.</t>
 
-              <t>Lists of lists - recursive application of the above</t>
+                  <t>logical tunnel: This can be a MPLS LSP or a GRE tunnel
+                  (or others as defined in this document), that is represented
+                  by a unique identifier (E.g. name).</t>
+                </list></t>
 
-              <t>Indirect nexthops - pointing to a nexthop identifier</t>
-
-              <t>Special nexthops - for performing specific well-defined
-              functions (e.g. drop)</t>
-            </list>It is expected that all network devices will have a limit
-          on how many levels of lookup can be performed and not all hardware
-          will be able to support all kinds of nexthops. RIB capability
-          negotiation becomes very important for this reason and a RIB
-          data-model MUST specify a way for an external entity to learn about
-          the network device's capabilities. Examples of when and how to use
-          various kinds of nexthops are shown in <xref
-          target="nexthop-examples"></xref>.</t>
+              <t>RIB_NAME: A nexthop pointing to a RIB. This indicates that
+              the route lookup needs to continue in the specified RIB. This is
+              a way to perform chained lookups.</t>
+            </list></t>
 
           <t>Tunnel nexthops allow an external entity to program static tunnel
           headers. There can be cases where the remote tunnel end-point does
@@ -510,118 +555,111 @@ tunnel-encap  tunnel-decap  special-nexthop
           It is expected that the data-model will model these tunnel types
           with complete accuracy.</t>
 
-          <t>Nexthop chains <xref target="nexthop-chains"></xref>, is a way to
-          perform multiple operations on a packet by logically combining them.
-          For example, one can chain together "decapsulate MPLS header" and
-          "send it out a specific EGRESS_INTERFACE". Chains can be used to
-          specify multiple headers over a packet, before a packet is
-          forwarded. One simple example is that of MPLS over GRE, wherein the
-          packet has an inner MPLS header followed by a GRE header followed by
-          an IP header. The outermost IP header is decided by the network
-          device whereas the MPLS header and GRE header are specified by the
-          controller. Not every network device will be able to support all
-          kinds of nexthop chains and an arbitrary number of header chained
-          together. The RIB data-model SHOULD provide a way to expose nexthop
-          chaining capability supported by a given network device.</t>
+          <section anchor="special-nexthops" title="Special nexthops">
+            <t>Special nexthops are for performing specific well-defined
+            functions (e.g. drop). The purpose of each of them is explained
+            below:<list style="symbols">
+                <t>DISCARD: This indicates that the network device should drop
+                the packet and increment a drop counter.</t>
+
+                <t>DISCARD_WITH_ERROR: This indicates that the network device
+                should drop the packet, increment a drop counter and send back
+                an appropriate error message (like ICMP error).</t>
+
+                <t>RECEIVE: This indicates that that the traffic is destined
+                for the network device. For example, protocol packets or OAM
+                packets. All locally destined traffic SHOULD be throttled to
+                avoid a denial of service attack on the router's control
+                plane. An optional rate-limiter can be specified to indicate
+                how to throttle traffic destined for the control plane. The
+                description of the rate-limiter is outside the scope of this
+                document.</t>
+              </list></t>
+          </section>
         </section>
 
-        <section title="Nexthop list attributes">
-          <t>For nexthops that are of the form of a list(s), attributes can be
-          associated with each member of the list to indicate the role of an
-          individual member of the list. Two attributes are specified:<list
-              style="symbols">
-              <t>NEXTHOP_PREFERENCE: This is used for protection schemes. It
-              is an integer value between 1 and 99. A lower value indicates
-              higher preference. To download a primary/standby pair to the
-              FIB, the nexthops that are resolved and have two highest
-              preferences are selected. Each &lt;NEXTHOP_PREFERENCE&gt; should
-              have a unique value within a &lt;nexthop-protection&gt; <list
-                  style="symbols">
-                  <t></t>
-                </list>(<xref target="rib-grammar"></xref>).</t>
+        <section anchor="derived-nexthop" title="Derived nexthops">
+          <t>Derived nexthops can be: <list style="symbols">
+              <t>Weighted lists - for load-balancing</t>
 
-              <t>NEXTHOP_LB_WEIGHT: This is used for load-balancing. Each list
-              member MUST be assigned a weight between 1 and 99. The weight
-              determines the proportion of traffic to be sent over a nexthop
-              used for forwarding as a ratio of the weight of this nexthop
-              divided by the weights of all the nexthops of this route that
-              are used for forwarding. To perform equal load-balancing, one
-              MAY specify a weight of "0" for all the member nexthops. The
-              value "0" is reserved for equal load-balancing and if applied,
-              MUST be applied to all member nexthops.</t>
+              <t>Preference lists - for protection using primary and
+              backup</t>
+
+              <t>Replication lists - list of nexthops to which to replicate a
+              packet</t>
+
+              <t>Nexthop chains - for chaining multiple operations or
+              attaching multiple headers</t>
+
+              <t>Lists of lists - recursive application of the above</t>
             </list></t>
+
+          <t>Nexthop chains (See <xref target="nexthop-chains"/> for usage),
+          is a way to perform multiple operations on a packet by logically
+          combining them. For example, one can chain together "decapsulate
+          MPLS header" and "send it out a specific EGRESS_INTERFACE". Chains
+          can be used to specify multiple headers over a packet, before a
+          packet is forwarded. One simple example is that of MPLS over GRE,
+          wherein the packet has an inner MPLS header followed by a GRE header
+          followed by an IP header. The outermost IP header is decided by the
+          network device whereas the MPLS header and GRE header are specified
+          by the controller. Not every network device will be able to support
+          all kinds of nexthop chains and an arbitrary number of header
+          chained together. The RIB data-model SHOULD provide a way to expose
+          nexthop chaining capability supported by a given network device.</t>
+
+          <t>It is expected that all network devices will have a limit on how
+          many levels of lookup can be performed and not all hardware will be
+          able to support all kinds of nexthops. RIB capability negotiation
+          becomes very important for this reason and a RIB data-model MUST
+          specify a way for an external entity to learn about the network
+          device's capabilities.</t>
+
+          <section title="Nexthop list attributes">
+            <t>For nexthops that are of the form of a list(s), attributes can
+            be associated with each member of the list to indicate the role of
+            an individual member of the list. Two attributes are
+            specified:<list style="symbols">
+                <t>NEXTHOP_PREFERENCE: This is used for protection schemes. It
+                is an integer value between 1 and 99. A lower value indicates
+                higher preference. To download a primary/standby pair to the
+                FIB, the nexthops that are resolved and have two highest
+                preferences are selected. Each &lt;NEXTHOP_PREFERENCE&gt;
+                should have a unique value within a &lt;nexthop-protection&gt;
+                <list style="symbols">
+                    <t/>
+                  </list>(<xref target="rib-grammar"/>).</t>
+
+                <t>NEXTHOP_LB_WEIGHT: This is used for load-balancing. Each
+                list member MUST be assigned a weight between 1 and 99. The
+                weight determines the proportion of traffic to be sent over a
+                nexthop used for forwarding as a ratio of the weight of this
+                nexthop divided by the weights of all the nexthops of this
+                route that are used for forwarding. To perform equal
+                load-balancing, one MAY specify a weight of "0" for all the
+                member nexthops. The value "0" is reserved for equal
+                load-balancing and if applied, MUST be applied to all member
+                nexthops.</t>
+              </list></t>
+          </section>
         </section>
 
-        <section title="Nexthop content">
-          <t>At the lowest level, a nexthop can be one of:<list
-              style="symbols">
-              <t>identifier: This is an identifier returned by the network
-              device representing a nexthop. This can be used as a way of
-              re-using a nexthop when programming complex nexthops.</t>
+        <section anchor="nexthop-indirection" title="Nexthop indirection">
+          <t>Nexthops can be identified by an identifier to create a level of
+          indirection. The identifier is set by the RIB manager and returned
+          to the external entity on request.</t>
 
-              <t>EGRESS_INTERFACE: This represents a physical, logical or
-              virtual interface on the network device. Address resolution must
-              not be required on this interface. This interface may belong to
-              any routing instance.</t>
-
-              <t>IP address: A route lookup on this IP address is done to
-              determine the egress interface. Address resolution may be
-              required depending on the interface. <list style="symbols">
-                  <t>An optional RIB name can also be specified to indicate
-                  the RIB in which the IP address is to be looked up. One can
-                  use the RIB name field to direct the packet from one domain
-                  into another domain. By default the RIB will be the same as
-                  the one that route belongs to.</t>
-                </list></t>
-
-              <t>EGRESS_INTERFACE and IP address: This can be used in cases
-              e.g. where the IP address is a link-local address.</t>
-
-              <t>EGRESS_INTERFACE and MAC address: The egress interface must
-              be an ethernet interface. Address resolution is not required for
-              this nexthop.</t>
-
-              <t>tunnel encap: This can be an encap representing an IP tunnel
-              or MPLS tunnel or others as defined in this document. An
-              optional egress interface can be chained to the tunnel encap to
-              indicate which interface to send the packet out on. The egress
-              interface is useful when the network device contains Ethernet
-              interfaces and one needs to perform address resolution for the
-              IP packet.</t>
-
-              <t>tunnel decap: This is to specify decapsulating a tunnel
-              header. After decap, further lookup on the packet can be done
-              via chaining it with another nexthop. The packet can also be
-              sent out via a EGRESS_INTERFACE directly.</t>
-
-              <t>logical tunnel: This can be a MPLS LSP or a GRE tunnel (or
-              others as defined in this document), that is represented by a
-              unique identifier (E.g. name).</t>
-
-              <t>RIB_NAME: A nexthop pointing to a RIB indicates that the
-              route lookup needs to continue in the specified RIB. This is a
-              way to perform chained lookups.</t>
-            </list></t>
-        </section>
-
-        <section title="Special nexthops">
-          <t>This document specifies certain special nexthops. The purpose of
-          each of them is explained below:<list style="symbols">
-              <t>DISCARD: This indicates that the network device should drop
-              the packet and increment a drop counter.</t>
-
-              <t>DISCARD_WITH_ERROR: This indicates that the network device
-              should drop the packet, increment a drop counter and send back
-              an appropriate error message (like ICMP error).</t>
-
-              <t>RECEIVE: This indicates that that the traffic is destined for
-              the network device. For example, protocol packets or OAM
-              packets. All locally destined traffic SHOULD be throttled to
-              avoid a denial of service attack on the router's control plane.
-              An optional rate-limiter can be specified to indicate how to
-              throttle traffic destined for the control plane. The description
-              of the rate-limiter is outside the scope of this document.</t>
-            </list></t>
+          <t>One example of usage of indirection is a nexthop that points to
+          another network device (Eg. BGP peer). The returned nexthop
+          identifier can then be used for programming routes to point to the
+          this nexthop. Given that the RIB manager has created an indirection
+          using the nexthop identifier, if the transport path to the network
+          device (BGP peer) changes, that change in path will be seamless to
+          the external entity and all routes that point to that network device
+          will automatically start going over the new transport path. Nexthop
+          indirection using identifiers could be applied to not just unicast
+          nexthops, but even to nexthops that contain chains and nested
+          nexthops. See (<xref target="derived-nexthop"/>) for examples.</t>
         </section>
       </section>
     </section>
@@ -662,10 +700,10 @@ tunnel-encap  tunnel-decap  special-nexthop
           is a candidate for selection)</t>
 
           <t>Reason - E.g. Not authorized</t>
-        </list>The data-model MUST specify which objects are modify-able
-      objects. A modify-able object is one whose contents can be changed
-      without having to change objects that depend on it and without affecting
-      any data forwarding. To change a non-modifiable object, one will need to
+        </list>The data-model MUST specify which objects can be modified. An
+      object that can be modified is one whose contents can be changed without
+      having to change objects that depend on it and without affecting any
+      data forwarding. To change a non-modifiable object, one will need to
       create a new object and delete the old one. For example, routes that use
       a nexthop that is identified by a nexthop identifier should be
       unaffected when the contents of that nexthop changes.</t>
@@ -678,7 +716,7 @@ tunnel-encap  tunnel-decap  special-nexthop
       notifications. A brief list of suggested notifications is as below:<list
           style="symbols">
           <t>Route change notification, with return code as specified in <xref
-          target="rib-write"></xref></t>
+          target="rib-write"/></t>
 
           <t>Nexthop resolution status (resolved/unresolved) notification</t>
         </list></t>
@@ -686,11 +724,9 @@ tunnel-encap  tunnel-decap  special-nexthop
 
     <section anchor="rib-grammar" title="RIB grammar">
       <t>This section specifies the RIB information model in Routing
-      Backus-Naur Form <xref target="RFC5511"></xref>. This grammar is
-      intended to help the reader better understand the english text
-      description in order to derive a data model. However it may not provide
-      all the detail provided by the english text. When there is a lack of
-      clarity in the grammar the english text will take precedence.</t>
+      Backus-Naur Form <xref target="RFC5511"/>. This grammar is intended to
+      help the reader better understand <xref target="rib-data"/> in order to
+      derive a data model.</t>
 
       <figure anchor="rib-grammar-details" title="RIB rBNF grammar">
         <artwork><![CDATA[
@@ -830,9 +866,9 @@ tunnel-encap  tunnel-decap  special-nexthop
         load-balanced, protected using preference or multicasted using
         replication. This is explicitly specified in the grammar. The nexthop
         has recursion built-in to address complex use-cases like the one
-        defined in <xref target="lists-of-lists"></xref>.</t>
+        defined in <xref target="lists-of-lists"/>.</t>
 
-        <t></t>
+        <t/>
       </section>
     </section>
 
@@ -873,7 +909,7 @@ tunnel-encap  tunnel-decap  special-nexthop
 
         <section anchor="replication-list" title="Replication lists">
           <t>One can create a replication list for replicating traffic to
-          multiple destinations. The destinations, in turn, could be complex
+          multiple destinations. The destinations, in turn, could be derived
           nexthops in themselves - at a level supported by the network device.
           Point to multipoint and broadcast are examples that involve
           replication.</t>
@@ -1037,7 +1073,7 @@ The above can be derived from the grammar as follows:
         </section>
 
         <section anchor="lists-of-lists" title="Lists of lists">
-          <t>Lists of lists is a complex construct. One example of usage of
+          <t>Lists of lists is a derived construct. One example of usage of
           such a construct is to replicate traffic to multiple destinations,
           with load balancing. In other words, for each branch of the
           replication tree, there are multiple interfaces on which traffic
@@ -1092,7 +1128,7 @@ This can be derived from the grammar as follows:
 ]]></artwork>
           </figure>
 
-          <t></t>
+          <t/>
         </section>
       </section>
 
@@ -1106,14 +1142,14 @@ This can be derived from the grammar as follows:
         <t>In PIM-based multicast, the packets are IP forwarded on an IP
         multicast tree. The downstream nodes on each point in the multicast
         tree is one or more IP addresses. These can be represented as a
-        replication list ( <xref target="replication-list"></xref> ).</t>
+        replication list ( <xref target="replication-list"/> ).</t>
 
         <t>In MPLS-based multicast, the packets are forwarded on a point to
         multipoint (P2MP) label-switched path (LSP). The nexthop for a P2MP
         LSP can be represented in the nexthop grammar as a
         &lt;logical-tunnel&gt; (P2MP LSP identifier) or a replication list (
-        <xref target="replication-list"></xref>) of &lt;tunnel-encap&gt;, with
-        each tunnel encap representing a single mpls downstream nexthop.</t>
+        <xref target="replication-list"/>) of &lt;tunnel-encap&gt;, with each
+        tunnel encap representing a single mpls downstream nexthop.</t>
       </section>
     </section>
 
@@ -1148,17 +1184,38 @@ This can be derived from the grammar as follows:
     </section>
 
     <section title="Security Considerations">
-      <t>All interactions between a RIB manager and an external entity MUST be
-      authenticated and authorized. The RIB manager MUST protect itself
-      against a denial of service attack by a rogue external entity, by
-      throttling request processing. A RIB manager MUST enforce limits on how
-      much data can be programmed by an external entity and return error when
-      such a limit is reached.</t>
+      <t>The Informational module specified in this document defines a schema
+      for data models that are designed to be accessed via network management
+      protocols such as NETCONF <xref target="RFC6241"/> or RESTCONF <xref
+      target="RFC8040"/>. The lowest NETCONF layer is the secure transport
+      layer, and the mandatory-to-implement secure transport is Secure Shell
+      (SSH) <xref target="RFC6242"/>. The lowest RESTCONF layer is HTTPS, and
+      the mandatory-to-implement secure transport is TLS <xref
+      target="RFC5246"/>.</t>
 
-      <t>The RIB manager MUST expose a data-model that it implements. An
-      external agent MUST send requests to the RIB manager that comply with
-      the supported data-model. The data-model MUST specify the behavior of
-      the RIB manager on handling of unsupported data requests.</t>
+      <t>The NETCONF access control model <xref target="RFC6536"/> provides
+      the means to restrict access for particular NETCONF or RESTCONF users to
+      a preconfigured subset of all available NETCONF or RESTCONF protocol
+      operations and content.</t>
+
+      <t>The RIB info model specifies read and write operations to network
+      devices. These network devices might be considered sensitive or
+      vulnerable in some network environments. Write operations to these
+      network devices without proper protection can have a negative effect on
+      network operations. Due to this factor, it is recommended that data
+      models also consider the following in their design:</t>
+
+      <t><list style="symbols">
+          <t>Require utilization of the authentication and authorization
+          features of the NETCONF or RESTCONF suite of protocols.</t>
+
+          <t>Augment the limits on how much data can be written or updated by
+          a remote entity built to include enough protection for a RIB
+          model.</t>
+
+          <t>Expose the specific RIB model implemented via NETCONF/RESTCONF
+          data models.</t>
+        </list></t>
     </section>
 
     <section title="IANA Considerations">
@@ -1177,6 +1234,8 @@ This can be derived from the grammar as follows:
   <back>
     <references title="Normative References">
       &RFC2119;
+
+      &RFC5246;
     </references>
 
     <references title="Informative References">
@@ -1186,11 +1245,15 @@ This can be derived from the grammar as follows:
 
       &RFC5511;
 
+      &RFC6241;
+
+      &RFC6242;
+
+      &RFC6536;
+
       &RFC7920;
 
-      &I2RS-USE-CASES;
-
-      &I2RS-VN-VC;
+      &RFC8040;
     </references>
   </back>
 </rfc>
