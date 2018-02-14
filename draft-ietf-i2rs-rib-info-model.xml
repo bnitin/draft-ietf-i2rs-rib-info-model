@@ -83,7 +83,7 @@
       into the RIB and the RIB manager installs state into the hardware; for
       packet forwarding. This draft specifies an information model for the RIB
       to enable defining a standardized data model, and it was used by the
-      IETF&rsquo;&rsquo;s I2RS WG to design the I2RS RIB data model. It is
+      IETF&rsquo;s I2RS WG to design the I2RS RIB data model. It is
       being published to record the higher level informational model decisions
       for RIBs so that other developers of RIBs may benefit from the design
       concepts.</t>
@@ -242,12 +242,12 @@
         the same rib family (e.g. IPv4). Each RIB MUST belong to a routing
         instance.</t>
 
-        <t>A routing instance can have multiple RIBs. A routing instance can
+        <t>A routing instance MAY have multiple RIBs. A routing instance MAY 
         even have two or more RIBs of the same rib family (e.g. IPv6). A
         typical case where this can be used is for multi-topology routing
         (<xref target="RFC4915"/>, <xref target="RFC5120"/>).</t>
 
-        <t>Each RIB can be optionally associated with a ENABLE_IP_RPF_CHECK
+        <t>Each RIB MAY be optionally associated with a ENABLE_IP_RPF_CHECK
         attribute that enables Reverse path forwarding (RPF) checks on all IP
         routes in that RIB. Reverse path forwarding (RPF) check is used to
         prevent spoofing and limit malicious traffic. For IP packets, the IP
@@ -433,7 +433,7 @@
         target="events"/> ).</t>
 
         <t>The overall structure and usage of a nexthop is as shown in the
-        figure below. For ease of ascii art depiction, only a single instance
+        figure below. For ease of ASCII art depiction, only a single instance
         of any component of the nexthop is shown in <xref
         target="nexthop-model"/>.</t>
 
@@ -1234,14 +1234,14 @@ This can be derived from the grammar as follows:
   <back>
     <references title="Normative References">
       &RFC2119;
-
-      &RFC5246;
     </references>
 
     <references title="Informative References">
       &RFC4915;
 
       &RFC5120;
+
+      &RFC5246;
 
       &RFC5511;
 
