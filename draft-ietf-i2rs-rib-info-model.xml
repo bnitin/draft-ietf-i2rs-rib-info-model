@@ -15,6 +15,7 @@
 <!ENTITY RFC7920 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7920.xml">
 <!ENTITY RFC8040 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8040.xml">
 <!ENTITY RFC8174 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml">
+<!ENTITY I2RS-RIB-DATA-MODEL SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-i2rs-rib-data-model.xml">
 ]>
 <?rfc toc="yes"?>
 <?rfc sortrefs="yes"?>
@@ -23,7 +24,7 @@
 <?rfc strict="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc sortrefs="yes"?>
-<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-16"
+<rfc category="info" docName="draft-ietf-i2rs-rib-info-model-17"
      ipr="trust200902">
   <front>
     <title>Routing Information Base Info Model</title>
@@ -66,7 +67,7 @@
 
     <!---->
 
-    <date day="2" month="May" year="2018"/>
+    <date day="7" month="May" year="2018"/>
 
     <area>Routing</area>
 
@@ -97,11 +98,11 @@
       <t>Routing and routing functions in enterprise and carrier networks are
       traditionally performed in network devices. Traditionally routers run
       routing protocols and the routing protocols (along with static
-      configuration information) populate the Routing information base (RIB)
+      configuration information) populate the Routing Information Base (RIB)
       of the router. The RIB is managed by the RIB manager and the RIB manager
       provides a northbound interface to its clients, i.e., the routing
       protocols, to insert routes into the RIB. The RIB manager consults the
-      RIB and decides how to program the forwarding information base (FIB) of
+      RIB and decides how to program the Forwarding Information Base (FIB) of
       the hardware by interfacing with the FIB manager. The relationship
       between these entities is shown in <xref
       target="rib-fib-interaction"/>.</t>
@@ -183,7 +184,9 @@
       <t>The purpose of this draft is to specify an information model for the
       RIB. Using the information model, one can build a detailed data model
       for the RIB. That data model could then be used by a RIB client to
-      program a network device.</t>
+      program a network device. One data model that has been based on this
+      draft is the I2RS RIB data model <xref
+      target="I-D.ietf-i2rs-rib-data-model"></xref>.</t>
 
       <t>The rest of this document is organized as follows. <xref
       target="rib-data"> </xref> goes into the details of what constitutes and
@@ -243,10 +246,10 @@
         within a routing instance (<xref target="routing-instance"/>). A
         network device MAY contain routing instances and each routing instance
         MAY contain RIBs. The name MUST be unique within a routing instance.
-        All routes in a given RIB MUST be of the same address family (e.g., IPv4).
-        Each RIB MUST belong to a routing instance.</t>
+        All routes in a given RIB MUST be of the same address family (e.g.,
+        IPv4). Each RIB MUST belong to a routing instance.</t>
 
-        <t>A routing instance may contain two or more RIBs of the same address 
+        <t>A routing instance may contain two or more RIBs of the same address
         family (e.g., IPv6). A typical case where this can be used is for
         multi-topology routing (<xref target="RFC4915"/>, <xref
         target="RFC5120"/>).</t>
@@ -274,14 +277,14 @@
 
         <t>The set of interfaces indicates which interfaces are associated
         with this routing instance. The RIBs specify how incoming traffic is
-        to be forwarded. And the routing parameters control the information in
+        to be forwarded, and the routing parameters control the information in
         the RIBs. The intersection set of interfaces of 2 routing instances
         MUST be the null set. In other words, an interface MUST NOT be present
         in 2 routing instances. Thus a routing instance describes the routing
         information and parameters across a set of interfaces.</t>
 
         <t>A routing instance MUST contain the following mandatory
-        fields.<list style="symbols">
+        fields:<list style="symbols">
             <t>INSTANCE_NAME: A routing instance is identified by its name,
             INSTANCE_NAME. This MUST be unique across all routing instances in
             a given network device.</t>
@@ -293,7 +296,7 @@
             RIBs can be an empty list.</t>
           </list></t>
 
-        <t>A routing instance MAY contain the following fields.<list
+        <t>A routing instance MAY contain the following fields:<list
             style="symbols">
             <t>interface-list: This represents the list of interfaces
             associated with this routing instance. The interface list helps
@@ -372,7 +375,7 @@
         an &ldquo;OR&rdquo; (to combine two filters).</t>
 
         <t>Each route MUST have associated with it the following mandatory
-        route attributes.<list style="symbols">
+        route attributes:<list style="symbols">
             <t>ROUTE_PREFERENCE: This is a numerical value that allows for
             comparing routes from different protocols. Static configuration is
             also considered a protocol for the purpose of this field. It is
@@ -419,7 +422,7 @@
         forwarding or by an MPLS tunnel or by both. If the RIB manager cannot
         resolve the nexthop, then the nexthop remains in an unresolved state
         and is NOT a candidate for installation in the FIB. Future RIB events
-        can cause an unresolved nexthop to get resolved (like that IP address
+        can cause an unresolved nexthop to get resolved (e.g., IP address
         being advertised by an IGP neighbor). Conversely, resolved nexthops
         can also become unresolved (e.g., in the case of a tunnel going down)
         and hence would no longer be candidates to be installed in the
@@ -600,8 +603,8 @@ tunnel-encap  tunnel-decap  rib-name   special-nexthop
               <t>Lists of lists - recursive application of the above</t>
             </list></t>
 
-          <t>Nexthop chains (See <xref target="nexthop-chains"/> for usage) is
-          a way to perform multiple operations on a packet by logically
+          <t>Nexthop chains (See <xref target="nexthop-chains"/> for usage)
+          are a way to perform multiple operations on a packet by logically
           combining them. For example, one can chain together "decapsulate
           MPLS header" and "send it out a specific EGRESS_INTERFACE". Chains
           can be used to specify multiple headers over a packet before a
@@ -1257,6 +1260,8 @@ This can be derived from the grammar as follows:
       &RFC8040;
 
       &RFC8341;
+
+      &I2RS-RIB-DATA-MODEL;
     </references>
   </back>
 </rfc>
